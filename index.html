@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="ru" class="h-full bg-slate-950 text-slate-100 select-none">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Подкидной Дурак Premium</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;500;600;700&display=swap');
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      overflow: hidden;
+    }
+    
+    .glass-panel {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+    
+    .glass-card {
+      background: rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+    .card-shadow {
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+    }
+
+    .card-target-glow {
+      box-shadow: 0 0 15px 3px rgba(34, 197, 94, 0.8), 0 0 5px 1px rgba(34, 197, 94, 0.5);
+      animation: pulse-glow 1.5s infinite alternate;
+    }
+
+    @keyframes pulse-glow {
+      from { box-shadow: 0 0 12px 2px rgba(34, 197, 94, 0.7); }
+      to { box-shadow: 0 0 22px 6px rgba(34, 197, 94, 1); }
+    }
+
+    .playing-card {
+      transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.25s ease, left 0.3s ease, top 0.3s ease;
+      transform-style: preserve-3d;
+    }
+
+    .star-glow {
+      filter: drop-shadow(0 0 10px rgba(234, 179, 8, 0.6));
+    }
+  </style>
+</head>
+<body class="h-full flex flex-col justify-between bg-gradient-to-b from-slate-950 via-slate-900 to-emerald-950 text-white font-sans antialiased overflow-hidden">
+
+  <!-- TOP BAR / HEADER -->
+  <header class="w-full px-4 pt-3 pb-2 flex justify-between items-center z-20">
+    <div class="flex items-center gap-2">
+      <div class="glass-panel px-3 py-1.5 rounded-2xl flex items-center gap-2 text-xs font-semibold shadow-lg">
+        <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span id="onlineCount" class="text-slate-300">1,420 онлайн</span>
+      </div>
+    </div>
+
+    <!-- Free Games Counter / Stars Balance -->
+    <div class="flex items-center gap-2">
+      <div id="gameCounterBadge" onclick="app.openPaywall()" class="glass-panel cursor-pointer hover:bg-white/15 transition px-3 py-1.5 rounded-2xl flex items-center gap-2 text-xs font-bold text-amber-300 border border-amber-500/30 shadow-lg">
+        <span>⭐️</span>
+        <span id="freeGamesText">3/3 Бесплатные</span>
+      </div>
+      
+      <button onclick="app.shareInvite()" class="glass-panel hover:bg-white/20 active:scale-95 transition p-2 rounded-2xl flex items-center justify-center text-xs font-semibold text-white">
+        <svg class="w-4 h-4 mr-1 fill-current" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/></svg>
+        <span>Пригласить</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- MODE SELECTOR & STATUS BANNER -->
+  <div class="w-full px-4 flex flex-col items-center gap-2 z-10">
+    <div class="glass-panel p-1 rounded-2xl flex w-full max-w-xs justify-between text-xs font-medium">
+      <button id="modeBotBtn" onclick="app.setMode('bot')" class="w-1/2 py-1.5 rounded-xl bg-white/20 text-white font-semibold transition shadow-sm">🤖 Боты (Играть)</button>
+      <button id="modeOnlineBtn" onclick="app.openOnlineRoadmap()" class="w-1/2 py-1.5 rounded-xl text-slate-400 hover:text-white transition flex items-center justify-center gap-1">
+        <span>🌐 Онлайн</span>
+        <span class="text-[9px] bg-amber-500/80 text-black px-1 rounded-md font-bold">Скоро</span>
+      </button>
+    </div>
+
+    <!-- Interactive Hint / Action Guidance Banner -->
+    <div id="gameBanner" class="text-xs font-semibold px-4 py-1.5 rounded-full glass-panel text-amber-200 border border-amber-400/20 opacity-0 transition-opacity duration-300">
+      Ожидание начала...
+    </div>
+  </div>
+
+  <!-- TABLE / GAME AREA -->
+  <main class="flex-1 relative w-full max-w-md mx-auto my-2 px-3 flex flex-col justify-between items-center">
+    
+    <!-- OPPONENT HAND -->
+    <div class="w-full flex justify-center items-center h-20 relative">
+      <div id="opponentHand" class="flex justify-center -space-x-8 w-full max-w-xs transition-all"></div>
+      <div class="absolute right-0 top-0 glass-panel px-2.5 py-1 rounded-xl text-[11px] text-slate-300 font-medium">
+        Бот <span id="opponentCardCount" class="font-bold text-white">(6)</span>
+      </div>
+    </div>
+
+    <!-- MAIN TABLE AREA (PAIRS OF ATTACK & DEFENSE CARDS) -->
+    <div class="w-full flex-1 min-h-[180px] glass-panel rounded-3xl p-3 flex flex-col justify-center items-center relative overflow-hidden my-1">
+      
+      <!-- TRUMP & DECK PILE (LEFT SIDE) -->
+      <div class="absolute left-3 top-1/2 -translate-y-1/2 flex items-center">
+        <div id="trumpCard" class="w-12 h-18 rounded-lg bg-white text-slate-900 border border-slate-300 flex flex-col justify-between p-1 font-bold text-xs shadow-md transform rotate-90 translate-x-3"></div>
+        <div id="deckPile" class="w-12 h-18 rounded-lg bg-gradient-to-br from-indigo-800 to-slate-900 border border-indigo-400/40 flex items-center justify-center text-xs font-bold shadow-xl relative cursor-pointer">
+          <span class="text-indigo-200 font-extrabold text-sm" id="deckCount">24</span>
+        </div>
+      </div>
+
+      <!-- DISCARD PILE (RIGHT SIDE) -->
+      <div id="discardPile" class="absolute right-3 top-1/2 -translate-y-1/2 w-12 h-18 rounded-lg bg-slate-800/40 border border-white/10 flex items-center justify-center opacity-0 transition-opacity">
+        <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Бито</span>
+      </div>
+
+      <!-- CARDS PLAYED ON TABLE -->
+      <div id="tablePairs" class="flex flex-wrap justify-center items-center gap-3 max-w-[260px] pl-8"></div>
+    </div>
+
+    <!-- PLAYER HAND -->
+    <div class="w-full flex flex-col items-center gap-1 h-32 justify-end relative">
+      <div id="playerHand" class="flex justify-center -space-x-8 w-full max-w-md transition-all pb-2"></div>
+    </div>
+  </main>
+
+  <!-- ACTION CONTROLS BAR -->
+  <footer class="w-full px-4 pb-6 pt-2 flex justify-center gap-3 z-20">
+    <button id="actionBtn" onclick="app.handleMainAction()" class="w-full max-w-xs py-3.5 px-6 rounded-2xl glass-panel bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold text-sm shadow-xl active:scale-95 transition transform border border-emerald-400/30 flex items-center justify-center gap-2">
+      <span id="actionBtnText">Начать игру</span>
+    </button>
+  </footer>
+
+  <!-- MODAL: PAYWALL / TELEGRAM STARS -->
+  <div id="paywallModal" class="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+    <div class="glass-panel bg-slate-900/90 border border-white/20 rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl relative transform scale-95 transition-transform duration-300" id="paywallContent">
+      <button onclick="app.closePaywall()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-xl font-bold p-1">✕</button>
+      
+      <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-3xl star-glow">
+        ⭐️
+      </div>
+      
+      <h3 class="text-xl font-bold text-white mb-1">Закончились попытки</h3>
+      <p class="text-xs text-slate-300 mb-5">Вы сыграли 3 бесплатные игры сегодня. Пополните баланс Telegram Stars для продолжения!</p>
+
+      <div class="space-y-3 mb-5">
+        <button onclick="app.buyStars(10, 25)" class="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 font-semibold text-sm text-slate-950 flex justify-between items-center shadow-lg active:scale-98 transition">
+          <span>10 Игр</span>
+          <span class="bg-black/20 px-2.5 py-1 rounded-xl text-xs font-bold text-amber-950 flex items-center gap-1">25 ⭐️</span>
+        </button>
+
+        <button onclick="app.buyStars('unlimited', 100)" class="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 font-semibold text-sm text-white flex justify-between items-center shadow-lg active:scale-98 transition">
+          <span>Безлимит на 24 часа</span>
+          <span class="bg-white/20 px-2.5 py-1 rounded-xl text-xs font-bold text-white flex items-center gap-1">100 ⭐️</span>
+        </button>
+
+        <button onclick="app.watchAdReward()" class="w-full py-2.5 px-4 rounded-2xl glass-panel hover:bg-white/15 font-medium text-xs text-emerald-300 flex justify-between items-center border border-emerald-500/30 active:scale-98 transition">
+          <span>📺 Смотреть рекламу</span>
+          <span class="font-bold">+1 игра</span>
+        </button>
+      </div>
+
+      <p class="text-[10px] text-slate-400">Безопасная оплата через официальный Telegram Stars API</p>
+    </div>
+  </div>
+
+  <!-- MODAL: ONLINE PVP ROADMAP -->
+  <div id="onlineModal" class="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+    <div class="glass-panel bg-slate-900/90 border border-white/20 rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl relative">
+      <button onclick="app.closeOnlineRoadmap()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-xl font-bold p-1">✕</button>
+      
+      <div class="w-14 h-14 mx-auto mb-3 rounded-full bg-indigo-500/20 border border-indigo-400/40 flex items-center justify-center text-2xl">
+        🌐
+      </div>
+      
+      <h3 class="text-xl font-bold text-white mb-1">Мультиплеер Скоро</h3>
+      <p class="text-xs text-slate-300 mb-4">Мы активно разрабатываем полноценный онлайн-режим!</p>
+
+      <div class="space-y-2.5 text-left mb-5 text-xs">
+        <div class="p-3 rounded-xl glass-panel border border-white/10 flex items-center gap-3">
+          <span class="text-lg">⚔️</span>
+          <div>
+            <div class="font-semibold text-white">Приватные комнаты с друзьями</div>
+            <div class="text-[11px] text-slate-400">Создавайте дуэли по ссылке</div>
+          </div>
+        </div>
+        <div class="p-3 rounded-xl glass-panel border border-white/10 flex items-center gap-3">
+          <span class="text-lg">🏆</span>
+          <div>
+            <div class="font-semibold text-white">Рейтинговый PvP</div>
+            <div class="text-[11px] text-slate-400">Поднимайтесь в Лиге мастеров</div>
+          </div>
+        </div>
+        <div class="p-3 rounded-xl glass-panel border border-white/10 flex items-center gap-3">
+          <span class="text-lg">🎰</span>
+          <div>
+            <div class="font-semibold text-white">Турниры на ⭐️ Stars</div>
+            <div class="text-[11px] text-slate-400">Выигрывайте ценные призы</div>
+          </div>
+        </div>
+      </div>
+
+      <button onclick="app.shareInvite()" class="w-full py-3 px-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 font-bold text-xs text-white shadow-lg active:scale-95 transition">
+        Пригласить друзей сейчас
+      </button>
+    </div>
+  </div>
+
+  <!-- APPLICATION LOGIC -->
+  <script>
+    // Web Audio Sound System
+    class SoundFX {
+      constructor() {
+        this.ctx = null;
+      }
+      init() {
+        if (!this.ctx) {
+          this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+      }
+      playCard() {
+        this.init();
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(300, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(120, this.ctx.currentTime + 0.08);
+        gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.08);
+      }
+      playSuccess() {
+        this.init();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        [523.25, 659.25, 783.99].forEach((freq, idx) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.frequency.value = freq;
+          gain.gain.setValueAtTime(0.15, now + idx * 0.08);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.08 + 0.2);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now + idx * 0.08);
+          osc.stop(now + idx * 0.08 + 0.2);
+        });
+      }
+      playStar() {
+        this.init();
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(880, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(1760, this.ctx.currentTime + 0.25);
+        gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.25);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.25);
+      }
+    }
+
+    const sound = new SoundFX();
+
+    // GAME CONSTANTS & STATE
+    const SUITS = ['♠', '♥', '♦', '♣'];
+    const SUIT_COLORS = { '♠': 'text-slate-900', '♣': 'text-slate-900', '♥': 'text-red-600', '♦': 'text-red-600' };
+    const RANKS = ['6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+    const RANK_VALUES = { '6': 6, '7': 7, '8': 8, '9': 9, '10': 10, 'J': 11, 'Q': 12, 'K': 13, 'A': 14 };
+
+    class DurakGame {
+      constructor() {
+        this.tg = window.Telegram?.WebApp;
+        if (this.tg) {
+          this.tg.ready();
+          this.tg.expand();
+        }
+
+        // Freemium State
+        this.freeGamesRemaining = parseInt(localStorage.getItem('durak_free_games') ?? '3');
+        this.selectedCardForDefense = null;
+
+        // Game State
+        this.deck = [];
+        this.trumpCard = null;
+        this.playerHand = [];
+        this.opponentHand = [];
+        this.tablePairs = []; // [{attack: card, defense: card|null}]
+        this.isPlayerAttacking = true;
+        this.gameState = 'IDLE'; // IDLE, PLAYING, GAME_OVER
+
+        this.initUI();
+        this.updateFreemiumBadge();
+      }
+
+      initUI() {
+        // Randomize online count slightly for dynamism
+        const onlineCountEl = document.getElementById('onlineCount');
+        if (onlineCountEl) {
+          const randomOnline = 1400 + Math.floor(Math.random() * 85);
+          onlineCountEl.textContent = `${randomOnline.toLocaleString()} онлайн`;
+        }
+      }
+
+      // --- FREEMIUM & PAYWALL SYSTEM ---
+      updateFreemiumBadge() {
+        const badgeText = document.getElementById('freeGamesText');
+        if (this.freeGamesRemaining > 0) {
+          badgeText.textContent = `${this.freeGamesRemaining}/3 Бесплатные`;
+        } else {
+          badgeText.textContent = `Купить Игры ⭐️`;
+        }
+      }
+
+      checkGameQuota() {
+        if (this.freeGamesRemaining <= 0) {
+          this.openPaywall();
+          return false;
+        }
+        return true;
+      }
+
+      useFreeGame() {
+        if (this.freeGamesRemaining > 0) {
+          this.freeGamesRemaining--;
+          localStorage.setItem('durak_free_games', this.freeGamesRemaining.toString());
+          this.updateFreemiumBadge();
+        }
+      }
+
+      openPaywall() {
+        const modal = document.getElementById('paywallModal');
+        const content = document.getElementById('paywallContent');
+        modal.classList.remove('opacity-0', 'pointer-events-none');
+        content.classList.remove('scale-95');
+        content.classList.add('scale-100');
+      }
+
+      closePaywall() {
+        const modal = document.getElementById('paywallModal');
+        const content = document.getElementById('paywallContent');
+        modal.classList.add('opacity-0', 'pointer-events-none');
+        content.classList.remove('scale-100');
+        content.classList.add('scale-95');
+      }
+
+      openOnlineRoadmap() {
+        const modal = document.getElementById('onlineModal');
+        modal.classList.remove('opacity-0', 'pointer-events-none');
+      }
+
+      closeOnlineRoadmap() {
+        const modal = document.getElementById('onlineModal');
+        modal.classList.add('opacity-0', 'pointer-events-none');
+      }
+
+      buyStars(gamesCount, starsCost) {
+        sound.playStar();
+        
+        // Mocking Telegram WebApp openInvoice API or fallback demo handling
+        if (this.tg && this.tg.openInvoice) {
+          // Prototype Telegram Stars Invoice payload call
+          this.tg.showPopup({
+            title: "Оплата Telegram Stars",
+            message: `Покупка ${gamesCount === 'unlimited' ? 'Безлимита' : gamesCount + ' игр'} за ${starsCost} ⭐️`,
+            buttons: [{ id: "ok", type: "ok", text: "Оплатить" }]
+          }, (buttonId) => {
+            if (buttonId === "ok") {
+              this.grantPurchasedGames(gamesCount);
+            }
+          });
+        } else {
+          // Demo fallback
+          alert(`[Демо-режим] Вы успешно приобрели ${gamesCount === 'unlimited' ? 'Безлимит' : gamesCount + ' игр'} за ${starsCost} ⭐️!`);
+          this.grantPurchasedGames(gamesCount);
+        }
+      }
+
+      grantPurchasedGames(count) {
+        if (count === 'unlimited') {
+          this.freeGamesRemaining = 999;
+        } else {
+          this.freeGamesRemaining += count;
+        }
+        localStorage.setItem('durak_free_games', this.freeGamesRemaining.toString());
+        this.updateFreemiumBadge();
+        this.closePaywall();
+        this.showBanner("Оплата принята! Игры зачислены 🎉");
+      }
+
+      watchAdReward() {
+        sound.playStar();
+        this.freeGamesRemaining += 1;
+        localStorage.setItem('durak_free_games', this.freeGamesRemaining.toString());
+        this.updateFreemiumBadge();
+        this.closePaywall();
+        this.showBanner("Награда получена: +1 игра! 🎬");
+      }
+
+      shareInvite() {
+        const shareUrl = "https://t.me/share/url?url=" + encodeURIComponent("https://t.me/durak_game_bot") + "&text=" + encodeURIComponent("Сыграем в Подкидного Дурака вместе! 🃏⭐️");
+        if (this.tg && this.tg.openTelegramLink) {
+          this.tg.openTelegramLink(shareUrl);
+        } else {
+          window.open(shareUrl, '_blank');
+        }
+      }
+
+      setMode(mode) {
+        document.getElementById('modeBotBtn').className = "w-1/2 py-1.5 rounded-xl bg-white/20 text-white font-semibold transition shadow-sm";
+        document.getElementById('modeOnlineBtn').className = "w-1/2 py-1.5 rounded-xl text-slate-400 hover:text-white transition flex items-center justify-center gap-1";
+      }
+
+      // --- GAME MECHANICS ---
+      startNewGame() {
+        if (!this.checkGameQuota()) return;
+
+        this.useFreeGame();
+        sound.playSuccess();
+
+        // Build Deck
+        this.deck = [];
+        for (let suit of SUITS) {
+          for (let rank of RANKS) {
+            this.deck.push({ suit, rank, val: RANK_VALUES[rank] });
+          }
+        }
+        this.shuffle(this.deck);
+
+        // Trump
+        this.trumpCard = this.deck.pop();
+        
+        // Deal 6 cards each
+        this.playerHand = [];
+        this.opponentHand = [];
+        for (let i = 0; i < 6; i++) {
+          if (this.deck.length > 0) this.playerHand.push(this.deck.pop());
+          if (this.deck.length > 0) this.opponentHand.push(this.deck.pop());
+        }
+
+        this.tablePairs = [];
+        this.isPlayerAttacking = true; // Player attacks first for simplicity
+        this.gameState = 'PLAYING';
+        this.selectedCardForDefense = null;
+
+        this.renderAll();
+        this.updateActionButton();
+        this.showBanner("Ваш ход! Выберите карту для атаки.");
+      }
+
+      shuffle(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [array[i], array[j]] = [array[j], array[i]];
+        }
+      }
+
+      // CARD BEATING LOGIC
+      canBeat(attackCard, defenseCard) {
+        if (!attackCard || !defenseCard) return false;
+        
+        const isAttackTrump = attackCard.suit === this.trumpCard.suit;
+        const isDefenseTrump = defenseCard.suit === this.trumpCard.suit;
+
+        if (isDefenseTrump && !isAttackTrump) return true;
+        if (isAttackTrump && !isDefenseTrump) return false;
+        if (attackCard.suit === defenseCard.suit) {
+          return defenseCard.val > attackCard.val;
+        }
+        return false;
+      }
+
+      // TAP ON HAND CARD
+      handlePlayerCardClick(cardIndex) {
+        if (this.gameState !== 'PLAYING') return;
+
+        const card = this.playerHand[cardIndex];
+
+        if (this.isPlayerAttacking) {
+          // ATTACKING LOGIC
+          if (this.tablePairs.length >= 6) return; // Limit attacks
+
+          if (this.tablePairs.length > 0) {
+            // Must match a rank already on the table
+            const tableRanks = new Set();
+            this.tablePairs.forEach(p => {
+              tableRanks.add(p.attack.rank);
+              if (p.defense) tableRanks.add(p.defense.rank);
+            });
+            if (!tableRanks.has(card.rank)) {
+              this.showBanner("Подкидывать можно только карты имеющегося достоинства!");
+              return;
+            }
+          }
+
+          // Move card to table
+          sound.playCard();
+          this.playerHand.splice(cardIndex, 1);
+          this.tablePairs.push({ attack: card, defense: null });
+          this.renderAll();
+
+          // Bot defends
+          setTimeout(() => this.botDefend(), 800);
+
+        } else {
+          // DEFENDING LOGIC
+          // Find undefended attacks
+          const undefendedIdxs = [];
+          this.tablePairs.forEach((p, idx) => {
+            if (!p.defense) undefendedIdxs.push(idx);
+          });
+
+          if (undefendedIdxs.length === 0) return;
+
+          // Target auto-selection or multi-target check
+          if (undefendedIdxs.length === 1) {
+            // One-Tap Auto Beat
+            const targetIdx = undefendedIdxs[0];
+            const attackCard = this.tablePairs[targetIdx].attack;
+
+            if (this.canBeat(attackCard, card)) {
+              sound.playCard();
+              this.playerHand.splice(cardIndex, 1);
+              this.tablePairs[targetIdx].defense = card;
+              this.selectedCardForDefense = null;
+              this.renderAll();
+
+              // Check if all undefended cards are beaten
+              if (this.tablePairs.every(p => p.defense)) {
+                setTimeout(() => this.botAttackMoreOrPass(), 800);
+              }
+            } else {
+              this.showBanner("Эта карта не может побить нападающую!");
+            }
+          } else {
+            // Visual target mode if multiple attacks exist
+            this.selectedCardForDefense = cardIndex;
+            this.showBanner("Выберите подсвеченную карту на столе для защиты");
+            this.renderAll();
+          }
+        }
+      }
+
+      // TAP ON TABLE ATTACK CARD FOR MANUAL TARGETING
+      handleTablePairClick(pairIndex) {
+        if (!this.isPlayerAttacking && this.selectedCardForDefense !== null) {
+          const pair = this.tablePairs[pairIndex];
+          if (!pair.defense) {
+            const defenseCard = this.playerHand[this.selectedCardForDefense];
+            if (this.canBeat(pair.attack, defenseCard)) {
+              sound.playCard();
+              this.playerHand.splice(this.selectedCardForDefense, 1);
+              pair.defense = defenseCard;
+              this.selectedCardForDefense = null;
+              this.renderAll();
+
+              if (this.tablePairs.every(p => p.defense)) {
+                setTimeout(() => this.botAttackMoreOrPass(), 800);
+              }
+            } else {
+              this.showBanner("Выбранная карта не бьет эту атаку!");
+            }
+          }
+        }
+      }
+
+      // BOT DEFENSE AI
+      botDefend() {
+        let undefendedPair = this.tablePairs.find(p => !p.defense);
+        if (!undefendedPair) return;
+
+        let bestDefenseCardIdx = -1;
+        let lowestVal = 99;
+
+        this.opponentHand.forEach((card, idx) => {
+          if (this.canBeat(undefendedPair.attack, card)) {
+            // Prefer non-trump beat, or lowest trump
+            let score = card.val + (card.suit === this.trumpCard.suit ? 20 : 0);
+            if (score < lowestVal) {
+              lowestVal = score;
+              bestDefenseCardIdx = idx;
+            }
+          }
+        });
+
+        if (bestDefenseCardIdx !== -1) {
+          sound.playCard();
+          undefendedPair.defense = this.opponentHand.splice(bestDefenseCardIdx, 1)[0];
+          this.renderAll();
+          this.showBanner("Бот побил карту. Ваш ход подкинуть или Бито.");
+        } else {
+          this.showBanner("Бот не может побить! Подкиньте ещё или Бот заберёт.");
+        }
+        this.updateActionButton();
+      }
+
+      // BOT ATTACK AI
+      botAttackMoreOrPass() {
+        // If bot is attacking, can it throw more cards?
+        const tableRanks = new Set();
+        this.tablePairs.forEach(p => {
+          tableRanks.add(p.attack.rank);
+          if (p.defense) tableRanks.add(p.defense.rank);
+        });
+
+        let candidateIdx = this.opponentHand.findIndex(c => tableRanks.has(c.rank));
+
+        if (candidateIdx !== -1 && this.tablePairs.length < 6 && this.playerHand.length > 0) {
+          sound.playCard();
+          const attackCard = this.opponentHand.splice(candidateIdx, 1)[0];
+          this.tablePairs.push({ attack: attackCard, defense: null });
+          this.renderAll();
+          this.showBanner("Бот подкинул карту! Защищайтесь.");
+          this.updateActionButton();
+        } else {
+          // Bot finishes attack -> BITO
+          this.showBanner("Бот завершил атаку. Бито!");
+          setTimeout(() => this.finishRound(true), 1000);
+        }
+      }
+
+      botInitialAttack() {
+        if (this.opponentHand.length === 0) return;
+
+        // Choose lowest card to attack
+        let lowestIdx = 0;
+        let lowestVal = 99;
+        this.opponentHand.forEach((card, idx) => {
+          let val = card.val + (card.suit === this.trumpCard.suit ? 20 : 0);
+          if (val < lowestVal) {
+            lowestVal = val;
+            lowestIdx = idx;
+          }
+        });
+
+        sound.playCard();
+        const attackCard = this.opponentHand.splice(lowestIdx, 1)[0];
+        this.tablePairs.push({ attack: attackCard, defense: null });
+        this.renderAll();
+        this.showBanner("Бот атакует! Отбейтесь картой из руки.");
+        this.updateActionButton();
+      }
+
+      // MAIN BOTTOM BUTTON ACTION
+      handleMainAction() {
+        if (this.gameState === 'IDLE' || this.gameState === 'GAME_OVER') {
+          this.startNewGame();
+          return;
+        }
+
+        if (this.isPlayerAttacking) {
+          // Player is attacking -> Button stands for "БИТО" (Clear Table)
+          if (this.tablePairs.length === 0) return;
+          
+          if (this.tablePairs.every(p => p.defense)) {
+            this.finishRound(true); // Table cleared
+          } else {
+            // Bot takes cards if not all defended
+            this.finishRound(false); // Opponent takes
+          }
+        } else {
+          // Player is defending -> Button stands for "БЕРУ" (Take Cards)
+          this.takeTableCards();
+        }
+      }
+
+      takeTableCards() {
+        sound.playCard();
+        this.tablePairs.forEach(p => {
+          this.playerHand.push(p.attack);
+          if (p.defense) this.playerHand.push(p.defense);
+        });
+        this.tablePairs = [];
+        this.showBanner("Вы взяли карты! Ход переходит к боту.");
+        
+        this.refillHands();
+        this.isPlayerAttacking = false;
+        this.renderAll();
+
+        setTimeout(() => this.botInitialAttack(), 1000);
+      }
+
+      finishRound(cleared) {
+        if (cleared) {
+          document.getElementById('discardPile').classList.remove('opacity-0');
+        } else {
+          // Opponent takes
+          this.tablePairs.forEach(p => {
+            this.opponentHand.push(p.attack);
+            if (p.defense) this.opponentHand.push(p.defense);
+          });
+        }
+
+        this.tablePairs = [];
+        this.refillHands();
+
+        // Switch role if round was cleared
+        if (cleared) {
+          this.isPlayerAttacking = !this.isPlayerAttacking;
+        }
+
+        this.checkWinCondition();
+        this.renderAll();
+
+        if (this.gameState === 'PLAYING') {
+          if (!this.isPlayerAttacking) {
+            setTimeout(() => this.botInitialAttack(), 800);
+          } else {
+            this.showBanner("Ваш ход! Выберите карту для атаки.");
+          }
+        }
+      }
+
+      refillHands() {
+        // Attacker draws first
+        if (this.isPlayerAttacking) {
+          while (this.playerHand.length < 6 && this.deck.length > 0) this.playerHand.push(this.deck.pop());
+          while (this.opponentHand.length < 6 && this.deck.length > 0) this.opponentHand.push(this.deck.pop());
+        } else {
+          while (this.opponentHand.length < 6 && this.deck.length > 0) this.opponentHand.push(this.deck.pop());
+          while (this.playerHand.length < 6 && this.deck.length > 0) this.playerHand.push(this.deck.pop());
+        }
+      }
+
+      checkWinCondition() {
+        if (this.deck.length === 0) {
+          if (this.playerHand.length === 0 && this.opponentHand.length === 0) {
+            this.gameState = 'GAME_OVER';
+            this.showBanner("Ничья! Игра окончена.");
+          } else if (this.playerHand.length === 0) {
+            this.gameState = 'GAME_OVER';
+            sound.playSuccess();
+            confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
+            this.showBanner("ПОБЕДА! Вы выиграли! 🎉");
+          } else if (this.opponentHand.length === 0) {
+            this.gameState = 'GAME_OVER';
+            this.showBanner("Вы проиграли (Остались Дураком) 🤖");
+          }
+        }
+        this.updateActionButton();
+      }
+
+      updateActionButton() {
+        const btnText = document.getElementById('actionBtnText');
+        const btn = document.getElementById('actionBtn');
+
+        if (this.gameState === 'IDLE' || this.gameState === 'GAME_OVER') {
+          btnText.textContent = "Начать новую игру";
+          btn.className = "w-full max-w-xs py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold text-sm shadow-xl active:scale-95 transition flex items-center justify-center gap-2 border border-emerald-400/30";
+          return;
+        }
+
+        if (this.isPlayerAttacking) {
+          btnText.textContent = this.tablePairs.length > 0 ? "Бито" : "Ваш ход";
+          btn.className = "w-full max-w-xs py-3.5 px-6 rounded-2xl glass-panel bg-gradient-to-r from-emerald-600 to-teal-700 text-white font-bold text-sm shadow-xl active:scale-95 transition flex items-center justify-center gap-2 border border-emerald-400/30";
+        } else {
+          btnText.textContent = "Беру карту";
+          btn.className = "w-full max-w-xs py-3.5 px-6 rounded-2xl glass-panel bg-gradient-to-r from-rose-600 to-red-700 text-white font-bold text-sm shadow-xl active:scale-95 transition flex items-center justify-center gap-2 border border-rose-400/30";
+        }
+      }
+
+      showBanner(text) {
+        const banner = document.getElementById('gameBanner');
+        banner.textContent = text;
+        banner.classList.remove('opacity-0');
+      }
+
+      // RENDERING ENGINE
+      renderAll() {
+        this.renderTrumpAndDeck();
+        this.renderPlayerHand();
+        this.renderOpponentHand();
+        this.renderTable();
+        this.updateActionButton();
+      }
+
+      renderTrumpAndDeck() {
+        const trumpEl = document.getElementById('trumpCard');
+        const deckCountEl = document.getElementById('deckCount');
+
+        if (this.trumpCard) {
+          const color = SUIT_COLORS[this.trumpCard.suit];
+          trumpEl.className = `w-12 h-18 rounded-lg bg-white ${color} border border-slate-300 flex flex-col justify-between p-1 font-bold text-xs shadow-md transform rotate-90 translate-x-3`;
+          trumpEl.innerHTML = `<div>${this.trumpCard.rank}</div><div class="text-center text-sm">${this.trumpCard.suit}</div>`;
+        }
+
+        deckCountEl.textContent = this.deck.length;
+        document.getElementById('deckPile').style.opacity = this.deck.length === 0 ? '0.2' : '1';
+      }
+
+      renderPlayerHand() {
+        const container = document.getElementById('playerHand');
+        container.innerHTML = '';
+
+        this.playerHand.forEach((card, idx) => {
+          const cardEl = document.createElement('div');
+          const color = SUIT_COLORS[card.suit];
+          const isSelected = this.selectedCardForDefense === idx;
+
+          cardEl.className = `playing-card w-14 h-20 rounded-xl bg-gradient-to-b from-white to-slate-100 ${color} border border-slate-300 flex flex-col justify-between p-1.5 font-bold text-sm card-shadow cursor-pointer hover:-translate-y-3 ${isSelected ? 'ring-2 ring-emerald-400 -translate-y-4' : ''}`;
+          cardEl.onclick = () => this.handlePlayerCardClick(idx);
+
+          cardEl.innerHTML = `
+            <div class="leading-none">${card.rank}<br><span class="text-xs">${card.suit}</span></div>
+            <div class="text-center text-base leading-none">${card.suit}</div>
+            <div class="leading-none text-right">${card.rank}</div>
+          `;
+          container.appendChild(cardEl);
+        });
+      }
+
+      renderOpponentHand() {
+        const container = document.getElementById('opponentHand');
+        const countEl = document.getElementById('opponentCardCount');
+        container.innerHTML = '';
+        countEl.textContent = `(${this.opponentHand.length})`;
+
+        this.opponentHand.forEach(() => {
+          const cardEl = document.createElement('div');
+          cardEl.className = `playing-card w-11 h-16 rounded-lg bg-gradient-to-br from-indigo-800 to-slate-900 border border-indigo-400/30 card-shadow`;
+          container.appendChild(cardEl);
+        });
+      }
+
+      renderTable() {
+        const container = document.getElementById('tablePairs');
+        container.innerHTML = '';
+
+        this.tablePairs.forEach((pair, idx) => {
+          const pairWrapper = document.createElement('div');
+          pairWrapper.className = 'relative w-14 h-20';
+          pairWrapper.onclick = () => this.handleTablePairClick(idx);
+
+          // Attack Card
+          const attColor = SUIT_COLORS[pair.attack.suit];
+          const isUndefended = !pair.defense;
+          const isTargetGlow = !this.isPlayerAttacking && isUndefended && this.selectedCardForDefense !== null;
+
+          const attCardEl = document.createElement('div');
+          attCardEl.className = `playing-card absolute inset-0 w-14 h-20 rounded-xl bg-white ${attColor} border border-slate-300 flex flex-col justify-between p-1.5 font-bold text-xs card-shadow ${isTargetGlow ? 'card-target-glow cursor-pointer' : ''}`;
+          attCardEl.innerHTML = `
+            <div class="leading-none">${pair.attack.rank}<br>${pair.attack.suit}</div>
+            <div class="text-center text-sm">${pair.attack.suit}</div>
+          `;
+          pairWrapper.appendChild(attCardEl);
+
+          // Defense Card (if played)
+          if (pair.defense) {
+            const defColor = SUIT_COLORS[pair.defense.suit];
+            const defCardEl = document.createElement('div');
+            defCardEl.className = `playing-card absolute top-3 left-3 w-14 h-20 rounded-xl bg-white ${defColor} border border-slate-300 flex flex-col justify-between p-1.5 font-bold text-xs card-shadow transform rotate-6`;
+            defCardEl.innerHTML = `
+              <div class="leading-none">${pair.defense.rank}<br>${pair.defense.suit}</div>
+              <div class="text-center text-sm">${pair.defense.suit}</div>
+            `;
+            pairWrapper.appendChild(defCardEl);
+          }
+
+          container.appendChild(pairWrapper);
+        });
+      }
+    }
+
+    // Initialize App
+    let app;
+    window.addEventListener('DOMContentLoaded', () => {
+      app = new DurakGame();
+    });
+  </script>
+</body>
+</html>
