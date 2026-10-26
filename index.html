@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Durak Empire • Apple Intelligence Edition</title>
+    <title>Durak Empire • Timer Edition</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
@@ -35,14 +35,13 @@
             position: relative;
         }
 
-        /* 🌟 Apple Intelligence Perimeter Holographic Glow (Fixed for all sides) */
+        /* 🌟 Apple Intelligence Perimeter Holographic Glow */
         .ai-glow-border {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
             pointer-events: none;
             z-index: 99999;
             border: 3px solid transparent;
-            border-radius: 0px;
             background: linear-gradient(60deg, #bc82f3, #f5b9ea, #38bdf8, #8d9fff, #ff6778, #f59e0b, #bc82f3) border-box;
             -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
             -webkit-mask-composite: xor;
@@ -64,9 +63,7 @@
             background: rgba(10, 15, 30, 0.9);
             backdrop-filter: blur(20px);
             border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-            position: sticky;
-            top: 0;
-            z-index: 100;
+            position: sticky; top: 0; z-index: 100;
         }
 
         .user-profile { display: flex; align-items: center; gap: 10px; }
@@ -86,7 +83,6 @@
             display: flex; align-items: center; gap: 6px;
             background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.12);
             padding: 6px 12px; border-radius: 14px; font-size: 13px; font-weight: 800;
-            backdrop-filter: blur(10px);
         }
         .pill.gold { color: #fef08a; border-color: rgba(245, 158, 11, 0.4); }
         .pill.stars { color: #38bdf8; border-color: rgba(56, 189, 248, 0.4); cursor: pointer; }
@@ -158,6 +154,13 @@
             border: 1px solid rgba(255, 255, 255, 0.08);
         }
 
+        /* ⏳ Timer badge with hourglass */
+        .timer-badge {
+            display: flex; align-items: center; gap: 6px;
+            background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.5);
+            padding: 6px 12px; border-radius: 14px; font-size: 13px; font-weight: 800; color: #fca5a5;
+        }
+
         .trump-badge {
             width: 26px; height: 26px; background: #fff; border-radius: 8px;
             display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px;
@@ -216,7 +219,6 @@
 </head>
 <body>
 
-    <!-- Holographic Glow Frame -->
     <div class="ai-glow-border"></div>
 
     <header class="header">
@@ -237,7 +239,7 @@
     <div id="lobbyScreen" class="screen active">
         <div class="hero-banner">
             <h1>DURAK EMPIRE</h1>
-            <p>Элитный подкидной дурак с ИИ и мультиплеером</p>
+            <p>Динамичный дурак с таймером и ИИ</p>
             <button class="btn btn-primary" onclick="startSingleGame()">⚡ Начать битву (Ставка: 150 🪙)</button>
         </div>
 
@@ -270,6 +272,7 @@
         <div class="game-arena">
             <div class="table-header">
                 <div class="deck-info">🃏 Колода: <span id="deckCount">24</span></div>
+                <div class="timer-badge">⏳ <span id="timerSec">10</span>с</div>
                 <div class="deck-info">Козырь: <div class="trump-badge" id="trumpSuit">♠</div></div>
             </div>
 
@@ -330,6 +333,9 @@
             attacker: 'player',
         };
 
+        let turnTimer = null;
+        let timeLeft = 10;
+
         const suits = ['♠', '♣', '♥', '♦'];
         const values = ['6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
         const valueMap = {'6':6, '7':7, '8':8, '9':9, '10':10, 'J':11, 'Q':12, 'K':13, 'A':14};
@@ -372,8 +378,26 @@
 
             renderGame();
             if (state.attacker === 'ai') {
-                setTimeout(aiAttackTurn, 1000);
+                setTimeout(aiAttackTurn, 800);
+            } else {
+                resetTimer();
             }
+        }
+
+        function resetTimer() {
+            clearInterval(turnTimer);
+            timeLeft = 10;
+            document.getElementById('timerSec').innerText = timeLeft;
+            
+            turnTimer = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timerSec').innerText = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(turnTimer);
+                    alert('⏳ Время истекло! Вы проиграли раунд из-за задержки хода.');
+                    showResult(false);
+                }
+            }, 1000);
         }
 
         function renderGame() {
@@ -451,9 +475,10 @@
                 state.table.push({ attack: card, defense: null });
                 state.playerHand.splice(index, 1);
                 renderGame();
+                resetTimer();
                 
-                // Bot thinks and defends with delay
-                setTimeout(aiDefendTurn, 1200);
+                // Bot defends
+                setTimeout(aiDefendTurn, 1000);
             } else {
                 let openAttack = state.table.find(p => p.defense === null);
                 if (!openAttack) return;
@@ -462,6 +487,7 @@
                     openAttack.defense = card;
                     state.playerHand.splice(index, 1);
                     renderGame();
+                    resetTimer();
                 } else {
                     alert('Этой картой побить нельзя!');
                 }
@@ -477,6 +503,7 @@
                 let defCard = state.aiHand.splice(candidateIdx, 1)[0];
                 openAttack.defense = defCard;
                 renderGame();
+                resetTimer();
             } else {
                 setTimeout(() => {
                     alert('🤖 Бот не смог отбиться и взял карты!');
@@ -487,6 +514,7 @@
                     state.table = [];
                     refillHands();
                     renderGame();
+                    resetTimer();
                 }, 800);
             }
         }
@@ -496,9 +524,11 @@
             let card = state.aiHand.pop();
             state.table.push({ attack: card, defense: null });
             renderGame();
+            resetTimer();
         }
 
         function playerTakeCards() {
+            clearInterval(turnTimer);
             state.table.forEach(p => {
                 state.playerHand.push(p.attack);
                 if (p.defense) state.playerHand.push(p.defense);
@@ -515,10 +545,12 @@
                 alert('Не все карты отбиты!');
                 return;
             }
+            clearInterval(turnTimer);
             state.table = [];
             refillHands();
             renderGame();
             state.attacker = 'player';
+            resetTimer();
         }
 
         function refillHands() {
@@ -538,6 +570,7 @@
         }
 
         function showResult(isWin) {
+            clearInterval(turnTimer);
             const modal = document.getElementById('resultModal');
             const title = document.getElementById('resultTitle');
             const desc = document.getElementById('resultDesc');
@@ -549,7 +582,7 @@
                 confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
             } else {
                 title.innerText = "💥 Поражение";
-                desc.innerText = "В этот раз бот оказался сильнее. Попробуйте снова!";
+                desc.innerText = "В этот раз бот оказался сильнее или истекло время!";
             }
             updateUI();
             modal.classList.add('open');
@@ -561,6 +594,7 @@
         }
 
         function returnToLobby() {
+            clearInterval(turnTimer);
             document.getElementById('gameScreen').classList.remove('active');
             document.getElementById('lobbyScreen').classList.add('active');
             updateUI();
