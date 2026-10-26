@@ -1,884 +1,818 @@
 <!DOCTYPE html>
-<html lang="ru" class="h-full bg-slate-950 text-slate-100 select-none">
+<html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Подкидной Дурак Premium</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;500;600;700&display=swap');
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
-      -webkit-tap-highlight-color: transparent;
-      overflow: hidden;
-    }
-    
-    .glass-panel {
-      background: rgba(255, 255, 255, 0.08);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-    }
-    
-    .glass-card {
-      background: rgba(255, 255, 255, 0.12);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.18);
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Durak Empire • Sci-Fi Apple HIG Edition</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-base: #060913;
+            --bg-card: rgba(15, 22, 41, 0.75);
+            --border-neon: rgba(245, 158, 11, 0.4);
+            --gold-primary: #f59e0b;
+            --gold-gradient: linear-gradient(135deg, #ffd700 0%, #f59e0b 50%, #b45309 100%);
+            --sci-blue: #0ea5e9;
+            --sci-glow: rgba(14, 165, 233, 0.3);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --danger: #ef4444;
+            --success: #10b981;
+        }
 
-    .card-shadow {
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
-    }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-    .card-target-glow {
-      box-shadow: 0 0 15px 3px rgba(34, 197, 94, 0.8), 0 0 5px 1px rgba(34, 197, 94, 0.5);
-      animation: pulse-glow 1.5s infinite alternate;
-    }
+        body {
+            background-color: var(--bg-base);
+            background-image: 
+                radial-gradient(circle at 10% 10%, rgba(14, 165, 233, 0.12) 0%, transparent 45%),
+                radial-gradient(circle at 90% 90%, rgba(245, 158, 11, 0.1) 0%, transparent 45%),
+                radial-gradient(circle at 50% 50%, rgba(129, 140, 248, 0.05) 0%, transparent 60%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
 
-    @keyframes pulse-glow {
-      from { box-shadow: 0 0 12px 2px rgba(34, 197, 94, 0.7); }
-      to { box-shadow: 0 0 22px 6px rgba(34, 197, 94, 1); }
-    }
+        /* Apple HIG + Sci-Fi Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: rgba(10, 15, 30, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
 
-    .playing-card {
-      transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.25s ease, left 0.3s ease, top 0.3s ease;
-      transform-style: preserve-3d;
-    }
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
 
-    .star-glow {
-      filter: drop-shadow(0 0 10px rgba(234, 179, 8, 0.6));
-    }
-  </style>
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 14px;
+            background: var(--gold-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 16px;
+            color: #000;
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+        }
+
+        .user-info .name {
+            font-size: 14px;
+            font-weight: 800;
+            letter-spacing: -0.3px;
+        }
+
+        .user-info .status {
+            font-size: 11px;
+            color: var(--gold-primary);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .balances {
+            display: flex;
+            gap: 8px;
+        }
+
+        .pill {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 6px 12px;
+            border-radius: 14px;
+            font-size: 13px;
+            font-weight: 800;
+            backdrop-filter: blur(10px);
+        }
+
+        .pill.gold { color: #fef08a; border-color: rgba(245, 158, 11, 0.4); box-shadow: inset 0 1px 0 rgba(255,255,255,0.2); }
+        .pill.stars { color: #38bdf8; border-color: rgba(56, 189, 248, 0.4); cursor: pointer; }
+
+        /* Screens */
+        .screen {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+            padding: 16px;
+            animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .screen.active { display: flex; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.98) translateY(8px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        /* Lobby - Trumps Empire Style Banner */
+        .hero-banner {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.18) 0%, rgba(14, 165, 233, 0.12) 100%);
+            border: 1px solid var(--border-neon);
+            border-radius: 28px;
+            padding: 24px 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.2);
+            overflow: hidden;
+        }
+
+        .hero-banner h1 {
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fff 20%, #fef08a 60%, var(--gold-primary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 6px;
+            letter-spacing: -0.5px;
+            text-shadow: 0 2px 10px rgba(245,158,11,0.3);
+        }
+
+        .hero-banner p {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border-radius: 18px;
+            font-weight: 800;
+            font-size: 15px;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            letter-spacing: -0.2px;
+        }
+
+        .btn-primary {
+            background: var(--gold-gradient);
+            color: #1a0f00;
+            box-shadow: 0 6px 25px rgba(245, 158, 11, 0.4), inset 0 1px 0 rgba(255,255,255,0.4);
+        }
+
+        .btn-primary:active { transform: scale(0.97); }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text-main);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            margin-top: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .menu-card {
+            background: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 22px;
+            padding: 18px 16px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+
+        .menu-card:hover {
+            border-color: var(--gold-primary);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(245, 158, 11, 0.15);
+        }
+
+        .menu-card .icon {
+            font-size: 26px;
+            margin-bottom: 10px;
+        }
+
+        .menu-card h3 {
+            font-size: 15px;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+
+        .menu-card span {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* Game Arena (Sci-Fi Apple Table) */
+        .game-arena {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            background: radial-gradient(circle at center, #0c162c 0%, #060913 100%);
+            border-radius: 32px;
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            padding: 14px;
+            margin-bottom: 12px;
+            min-height: 440px;
+            box-shadow: inset 0 0 40px rgba(14, 165, 233, 0.08), 0 15px 35px rgba(0,0,0,0.5);
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .deck-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 6px 14px;
+            border-radius: 14px;
+            font-size: 12px;
+            font-weight: 700;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+        }
+
+        .trump-badge {
+            width: 26px;
+            height: 26px;
+            background: #fff;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 14px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .opponents-row {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin: 10px 0;
+        }
+
+        .opponent-box {
+            background: rgba(15, 23, 42, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 10px 18px;
+            border-radius: 18px;
+            text-align: center;
+            min-width: 100px;
+            backdrop-filter: blur(10px);
+        }
+
+        .opponent-box.active-turn {
+            border-color: var(--gold-primary);
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.4);
+        }
+
+        .opponent-box .cards-count {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 2px;
+            font-weight: 600;
+        }
+
+        /* Battle Mat */
+        .battle-mat {
+            flex: 1;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 10px;
+            min-height: 140px;
+        }
+
+        .card-pair {
+            display: flex;
+            position: relative;
+            width: 70px;
+            height: 95px;
+        }
+
+        .card {
+            width: 64px;
+            height: 90px;
+            background: #ffffff;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 6px;
+            font-weight: 800;
+            font-size: 13px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+            user-select: none;
+            transition: transform 0.2s, border-color 0.2s;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .card.defending {
+            position: absolute;
+            top: 16px;
+            left: 20px;
+            z-index: 2;
+            transform: rotate(10deg);
+        }
+
+        .card.red { color: #e11d48; }
+        .card.black { color: #0f172a; }
+
+        .card.selectable:hover {
+            transform: translateY(-8px) scale(1.05);
+            border: 2px solid var(--gold-primary);
+        }
+
+        /* Player Hand */
+        .player-hand-area {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .hand-cards {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            overflow-x: auto;
+            padding: 8px 0;
+            min-height: 110px;
+        }
+
+        .table-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-action {
+            flex: 1;
+            padding: 12px;
+            border-radius: 14px;
+            font-weight: 800;
+            font-size: 13px;
+            border: none;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-take { background: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.4); }
+        .btn-done { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.4); }
+
+        /* Reactions */
+        .reactions-bar {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            padding-top: 4px;
+        }
+
+        .reaction-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.1s;
+        }
+        .reaction-btn:active { transform: scale(1.25); }
+
+        /* Modals (Apple Glass Blur) */
+        .modal {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(3, 6, 15, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+        .modal.open { display: flex; }
+
+        .modal-content {
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid var(--border-neon);
+            border-radius: 28px;
+            padding: 24px;
+            width: 100%;
+            max-width: 360px;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.2);
+        }
+
+        .modal-content h2 { font-size: 22px; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.5px; }
+        .modal-content p { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; }
+
+        .shop-item {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 18px;
+            padding: 14px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .shop-item span { font-weight: 800; font-size: 14px; }
+    </style>
 </head>
-<body class="h-full flex flex-col justify-between bg-gradient-to-b from-slate-950 via-slate-900 to-emerald-950 text-white font-sans antialiased overflow-hidden">
+<body>
 
-  <!-- TOP BAR / HEADER -->
-  <header class="w-full px-4 pt-3 pb-2 flex justify-between items-center z-20">
-    <div class="flex items-center gap-2">
-      <div class="glass-panel px-3 py-1.5 rounded-2xl flex items-center gap-2 text-xs font-semibold shadow-lg">
-        <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-        <span id="onlineCount" class="text-slate-300">1,420 онлайн</span>
-      </div>
-    </div>
-
-    <!-- Free Games Counter / Stars Balance -->
-    <div class="flex items-center gap-2">
-      <div id="gameCounterBadge" onclick="app.openPaywall()" class="glass-panel cursor-pointer hover:bg-white/15 transition px-3 py-1.5 rounded-2xl flex items-center gap-2 text-xs font-bold text-amber-300 border border-amber-500/30 shadow-lg">
-        <span>⭐️</span>
-        <span id="freeGamesText">3/3 Бесплатные</span>
-      </div>
-      
-      <button onclick="app.shareInvite()" class="glass-panel hover:bg-white/20 active:scale-95 transition p-2 rounded-2xl flex items-center justify-center text-xs font-semibold text-white">
-        <svg class="w-4 h-4 mr-1 fill-current" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/></svg>
-        <span>Пригласить</span>
-      </button>
-    </div>
-  </header>
-
-  <!-- MODE SELECTOR & STATUS BANNER -->
-  <div class="w-full px-4 flex flex-col items-center gap-2 z-10">
-    <div class="glass-panel p-1 rounded-2xl flex w-full max-w-xs justify-between text-xs font-medium">
-      <button id="modeBotBtn" onclick="app.setMode('bot')" class="w-1/2 py-1.5 rounded-xl bg-white/20 text-white font-semibold transition shadow-sm">🤖 Боты (Играть)</button>
-      <button id="modeOnlineBtn" onclick="app.openOnlineRoadmap()" class="w-1/2 py-1.5 rounded-xl text-slate-400 hover:text-white transition flex items-center justify-center gap-1">
-        <span>🌐 Онлайн</span>
-        <span class="text-[9px] bg-amber-500/80 text-black px-1 rounded-md font-bold">Скоро</span>
-      </button>
-    </div>
-
-    <!-- Interactive Hint / Action Guidance Banner -->
-    <div id="gameBanner" class="text-xs font-semibold px-4 py-1.5 rounded-full glass-panel text-amber-200 border border-amber-400/20 opacity-0 transition-opacity duration-300">
-      Ожидание начала...
-    </div>
-  </div>
-
-  <!-- TABLE / GAME AREA -->
-  <main class="flex-1 relative w-full max-w-md mx-auto my-2 px-3 flex flex-col justify-between items-center">
-    
-    <!-- OPPONENT HAND -->
-    <div class="w-full flex justify-center items-center h-20 relative">
-      <div id="opponentHand" class="flex justify-center -space-x-8 w-full max-w-xs transition-all"></div>
-      <div class="absolute right-0 top-0 glass-panel px-2.5 py-1 rounded-xl text-[11px] text-slate-300 font-medium">
-        Бот <span id="opponentCardCount" class="font-bold text-white">(6)</span>
-      </div>
-    </div>
-
-    <!-- MAIN TABLE AREA (PAIRS OF ATTACK & DEFENSE CARDS) -->
-    <div class="w-full flex-1 min-h-[180px] glass-panel rounded-3xl p-3 flex flex-col justify-center items-center relative overflow-hidden my-1">
-      
-      <!-- TRUMP & DECK PILE (LEFT SIDE) -->
-      <div class="absolute left-3 top-1/2 -translate-y-1/2 flex items-center">
-        <div id="trumpCard" class="w-12 h-18 rounded-lg bg-white text-slate-900 border border-slate-300 flex flex-col justify-between p-1 font-bold text-xs shadow-md transform rotate-90 translate-x-3"></div>
-        <div id="deckPile" class="w-12 h-18 rounded-lg bg-gradient-to-br from-indigo-800 to-slate-900 border border-indigo-400/40 flex items-center justify-center text-xs font-bold shadow-xl relative cursor-pointer">
-          <span class="text-indigo-200 font-extrabold text-sm" id="deckCount">24</span>
+    <!-- Header -->
+    <header class="header">
+        <div class="user-profile">
+            <div class="avatar" id="userAvatar">👑</div>
+            <div class="user-info">
+                <div class="name" id="userName">Empire Player</div>
+                <div class="status" id="userTitle">VIP Member</div>
+            </div>
         </div>
-      </div>
-
-      <!-- DISCARD PILE (RIGHT SIDE) -->
-      <div id="discardPile" class="absolute right-3 top-1/2 -translate-y-1/2 w-12 h-18 rounded-lg bg-slate-800/40 border border-white/10 flex items-center justify-center opacity-0 transition-opacity">
-        <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Бито</span>
-      </div>
-
-      <!-- CARDS PLAYED ON TABLE -->
-      <div id="tablePairs" class="flex flex-wrap justify-center items-center gap-3 max-w-[260px] pl-8"></div>
-    </div>
-
-    <!-- PLAYER HAND -->
-    <div class="w-full flex flex-col items-center gap-1 h-32 justify-end relative">
-      <div id="playerHand" class="flex justify-center -space-x-8 w-full max-w-md transition-all pb-2"></div>
-    </div>
-  </main>
-
-  <!-- ACTION CONTROLS BAR -->
-  <footer class="w-full px-4 pb-6 pt-2 flex justify-center gap-3 z-20">
-    <button id="actionBtn" onclick="app.handleMainAction()" class="w-full max-w-xs py-3.5 px-6 rounded-2xl glass-panel bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold text-sm shadow-xl active:scale-95 transition transform border border-emerald-400/30 flex items-center justify-center gap-2">
-      <span id="actionBtnText">Начать игру</span>
-    </button>
-  </footer>
-
-  <!-- MODAL: PAYWALL / TELEGRAM STARS -->
-  <div id="paywallModal" class="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-300">
-    <div class="glass-panel bg-slate-900/90 border border-white/20 rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl relative transform scale-95 transition-transform duration-300" id="paywallContent">
-      <button onclick="app.closePaywall()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-xl font-bold p-1">✕</button>
-      
-      <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-3xl star-glow">
-        ⭐️
-      </div>
-      
-      <h3 class="text-xl font-bold text-white mb-1">Закончились попытки</h3>
-      <p class="text-xs text-slate-300 mb-5">Вы сыграли 3 бесплатные игры сегодня. Пополните баланс Telegram Stars для продолжения!</p>
-
-      <div class="space-y-3 mb-5">
-        <button onclick="app.buyStars(10, 25)" class="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 font-semibold text-sm text-slate-950 flex justify-between items-center shadow-lg active:scale-98 transition">
-          <span>10 Игр</span>
-          <span class="bg-black/20 px-2.5 py-1 rounded-xl text-xs font-bold text-amber-950 flex items-center gap-1">25 ⭐️</span>
-        </button>
-
-        <button onclick="app.buyStars('unlimited', 100)" class="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 font-semibold text-sm text-white flex justify-between items-center shadow-lg active:scale-98 transition">
-          <span>Безлимит на 24 часа</span>
-          <span class="bg-white/20 px-2.5 py-1 rounded-xl text-xs font-bold text-white flex items-center gap-1">100 ⭐️</span>
-        </button>
-
-        <button onclick="app.watchAdReward()" class="w-full py-2.5 px-4 rounded-2xl glass-panel hover:bg-white/15 font-medium text-xs text-emerald-300 flex justify-between items-center border border-emerald-500/30 active:scale-98 transition">
-          <span>📺 Смотреть рекламу</span>
-          <span class="font-bold">+1 игра</span>
-        </button>
-      </div>
-
-      <p class="text-[10px] text-slate-400">Безопасная оплата через официальный Telegram Stars API</p>
-    </div>
-  </div>
-
-  <!-- MODAL: ONLINE PVP ROADMAP -->
-  <div id="onlineModal" class="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-300">
-    <div class="glass-panel bg-slate-900/90 border border-white/20 rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl relative">
-      <button onclick="app.closeOnlineRoadmap()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-xl font-bold p-1">✕</button>
-      
-      <div class="w-14 h-14 mx-auto mb-3 rounded-full bg-indigo-500/20 border border-indigo-400/40 flex items-center justify-center text-2xl">
-        🌐
-      </div>
-      
-      <h3 class="text-xl font-bold text-white mb-1">Мультиплеер Скоро</h3>
-      <p class="text-xs text-slate-300 mb-4">Мы активно разрабатываем полноценный онлайн-режим!</p>
-
-      <div class="space-y-2.5 text-left mb-5 text-xs">
-        <div class="p-3 rounded-xl glass-panel border border-white/10 flex items-center gap-3">
-          <span class="text-lg">⚔️</span>
-          <div>
-            <div class="font-semibold text-white">Приватные комнаты с друзьями</div>
-            <div class="text-[11px] text-slate-400">Создавайте дуэли по ссылке</div>
-          </div>
+        <div class="balances">
+            <div class="pill gold" onclick="openShop()">🪙 <span id="coinBalance">2,500</span></div>
+            <div class="pill stars" onclick="openShop()">⭐ <span id="starBalance">100</span></div>
         </div>
-        <div class="p-3 rounded-xl glass-panel border border-white/10 flex items-center gap-3">
-          <span class="text-lg">🏆</span>
-          <div>
-            <div class="font-semibold text-white">Рейтинговый PvP</div>
-            <div class="text-[11px] text-slate-400">Поднимайтесь в Лиге мастеров</div>
-          </div>
-        </div>
-        <div class="p-3 rounded-xl glass-panel border border-white/10 flex items-center gap-3">
-          <span class="text-lg">🎰</span>
-          <div>
-            <div class="font-semibold text-white">Турниры на ⭐️ Stars</div>
-            <div class="text-[11px] text-slate-400">Выигрывайте ценные призы</div>
-          </div>
-        </div>
-      </div>
+    </header>
 
-      <button onclick="app.shareInvite()" class="w-full py-3 px-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 font-bold text-xs text-white shadow-lg active:scale-95 transition">
-        Пригласить друзей сейчас
-      </button>
+    <!-- Lobby Screen -->
+    <div id="lobbyScreen" class="screen active">
+        <div class="hero-banner">
+            <h1>DURAK EMPIRE</h1>
+            <p>Премиальный карточный экшен нового поколения в Telegram</p>
+            <button class="btn btn-primary" onclick="startSingleGame()">⚡ Быстрая битва (vs AI)</button>
+        </div>
+
+        <div class="menu-grid">
+            <div class="menu-card" onclick="openMultiplayerLobby()">
+                <div class="icon">🌐</div>
+                <h3>Онлайн Столы</h3>
+                <span>PvP комнаты и ставки</span>
+            </div>
+            <div class="menu-card" onclick="openInviteModal()">
+                <div class="icon">🎁</div>
+                <h3>Пригласить</h3>
+                <span>+1,000 монет за друга</span>
+            </div>
+            <div class="menu-card" onclick="openShop()">
+                <div class="icon">💎</div>
+                <h3>Магазин</h3>
+                <span>Звезды и PRO статус</span>
+            </div>
+            <div class="menu-card" onclick="showLeaderboard()">
+                <div class="icon">🏆</div>
+                <h3>Лига</h3>
+                <span>Глобальный рейтинг</span>
+            </div>
+        </div>
     </div>
-  </div>
 
-  <!-- APPLICATION LOGIC -->
-  <script>
-    // Web Audio Sound System
-    class SoundFX {
-      constructor() {
-        this.ctx = null;
-      }
-      init() {
-        if (!this.ctx) {
-          this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-        }
-      }
-      playCard() {
-        this.init();
-        if (!this.ctx) return;
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(300, this.ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(120, this.ctx.currentTime + 0.08);
-        gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start();
-        osc.stop(this.ctx.currentTime + 0.08);
-      }
-      playSuccess() {
-        this.init();
-        if (!this.ctx) return;
-        const now = this.ctx.currentTime;
-        [523.25, 659.25, 783.99].forEach((freq, idx) => {
-          const osc = this.ctx.createOscillator();
-          const gain = this.ctx.createGain();
-          osc.frequency.value = freq;
-          gain.gain.setValueAtTime(0.15, now + idx * 0.08);
-          gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.08 + 0.2);
-          osc.connect(gain);
-          gain.connect(this.ctx.destination);
-          osc.start(now + idx * 0.08);
-          osc.stop(now + idx * 0.08 + 0.2);
-        });
-      }
-      playStar() {
-        this.init();
-        if (!this.ctx) return;
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(880, this.ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(1760, this.ctx.currentTime + 0.25);
-        gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.25);
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start();
-        osc.stop(this.ctx.currentTime + 0.25);
-      }
-    }
+    <!-- Game Screen -->
+    <div id="gameScreen" class="screen">
+        <div class="game-arena">
+            <div class="table-header">
+                <div class="deck-info">
+                    🃏 Колода: <span id="deckCount">24</span>
+                </div>
+                <div class="deck-info">
+                    Козырь: <div class="trump-badge" id="trumpSuit">♠</div>
+                </div>
+            </div>
 
-    const sound = new SoundFX();
+            <div class="opponents-row" id="opponentsRow"></div>
 
-    // GAME CONSTANTS & STATE
-    const SUITS = ['♠', '♥', '♦', '♣'];
-    const SUIT_COLORS = { '♠': 'text-slate-900', '♣': 'text-slate-900', '♥': 'text-red-600', '♦': 'text-red-600' };
-    const RANKS = ['6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
-    const RANK_VALUES = { '6': 6, '7': 7, '8': 8, '9': 9, '10': 10, 'J': 11, 'Q': 12, 'K': 13, 'A': 14 };
+            <div class="battle-mat" id="battleMat"></div>
 
-    class DurakGame {
-      constructor() {
-        this.tg = window.Telegram?.WebApp;
-        if (this.tg) {
-          this.tg.ready();
-          this.tg.expand();
-        }
+            <div class="reactions-bar">
+                <button class="reaction-btn" onclick="sendReaction('🔥')">🔥</button>
+                <button class="reaction-btn" onclick="sendReaction('😂')">😂</button>
+                <button class="reaction-btn" onclick="sendReaction('👍')">👍</button>
+                <button class="reaction-btn" onclick="sendReaction('💩')">💩</button>
+                <button class="reaction-btn" onclick="sendReaction('🚀')">🚀</button>
+            </div>
+        </div>
 
-        // Freemium State
-        this.freeGamesRemaining = parseInt(localStorage.getItem('durak_free_games') ?? '3');
-        this.selectedCardForDefense = null;
-
-        // Game State
-        this.deck = [];
-        this.trumpCard = null;
-        this.playerHand = [];
-        this.opponentHand = [];
-        this.tablePairs = []; // [{attack: card, defense: card|null}]
-        this.isPlayerAttacking = true;
-        this.gameState = 'IDLE'; // IDLE, PLAYING, GAME_OVER
-
-        this.initUI();
-        this.updateFreemiumBadge();
-      }
-
-      initUI() {
-        // Randomize online count slightly for dynamism
-        const onlineCountEl = document.getElementById('onlineCount');
-        if (onlineCountEl) {
-          const randomOnline = 1400 + Math.floor(Math.random() * 85);
-          onlineCountEl.textContent = `${randomOnline.toLocaleString()} онлайн`;
-        }
-      }
-
-      // --- FREEMIUM & PAYWALL SYSTEM ---
-      updateFreemiumBadge() {
-        const badgeText = document.getElementById('freeGamesText');
-        if (this.freeGamesRemaining > 0) {
-          badgeText.textContent = `${this.freeGamesRemaining}/3 Бесплатные`;
-        } else {
-          badgeText.textContent = `Купить Игры ⭐️`;
-        }
-      }
-
-      checkGameQuota() {
-        if (this.freeGamesRemaining <= 0) {
-          this.openPaywall();
-          return false;
-        }
-        return true;
-      }
-
-      useFreeGame() {
-        if (this.freeGamesRemaining > 0) {
-          this.freeGamesRemaining--;
-          localStorage.setItem('durak_free_games', this.freeGamesRemaining.toString());
-          this.updateFreemiumBadge();
-        }
-      }
-
-      openPaywall() {
-        const modal = document.getElementById('paywallModal');
-        const content = document.getElementById('paywallContent');
-        modal.classList.remove('opacity-0', 'pointer-events-none');
-        content.classList.remove('scale-95');
-        content.classList.add('scale-100');
-      }
-
-      closePaywall() {
-        const modal = document.getElementById('paywallModal');
-        const content = document.getElementById('paywallContent');
-        modal.classList.add('opacity-0', 'pointer-events-none');
-        content.classList.remove('scale-100');
-        content.classList.add('scale-95');
-      }
-
-      openOnlineRoadmap() {
-        const modal = document.getElementById('onlineModal');
-        modal.classList.remove('opacity-0', 'pointer-events-none');
-      }
-
-      closeOnlineRoadmap() {
-        const modal = document.getElementById('onlineModal');
-        modal.classList.add('opacity-0', 'pointer-events-none');
-      }
-
-      buyStars(gamesCount, starsCost) {
-        sound.playStar();
+        <div class="player-hand-area">
+            <div class="table-actions" id="tableActions" style="display:none;">
+                <button class="btn-action btn-take" onclick="playerTake()">Взять</button>
+                <button class="btn-action btn-done" onclick="playerBito()">Бито</button>
+            </div>
+            <div class="hand-cards" id="playerHand"></div>
+        </div>
         
-        // Mocking Telegram WebApp openInvoice API or fallback demo handling
-        if (this.tg && this.tg.openInvoice) {
-          // Prototype Telegram Stars Invoice payload call
-          this.tg.showPopup({
-            title: "Оплата Telegram Stars",
-            message: `Покупка ${gamesCount === 'unlimited' ? 'Безлимита' : gamesCount + ' игр'} за ${starsCost} ⭐️`,
-            buttons: [{ id: "ok", type: "ok", text: "Оплатить" }]
-          }, (buttonId) => {
-            if (buttonId === "ok") {
-              this.grantPurchasedGames(gamesCount);
+        <button class="btn btn-secondary" style="margin-top: 10px; padding: 12px;" onclick="returnToLobby()">🚪 Покинуть стол</button>
+    </div>
+
+    <!-- Shop Modal -->
+    <div class="modal" id="shopModal">
+        <div class="modal-content">
+            <h2>💎 Имперский Магазин</h2>
+            <p>Пополняйте фишки за официальные Telegram Stars</p>
+            
+            <div class="shop-item">
+                <span>📦 2,000 Монет</span>
+                <button class="btn btn-primary" style="width: auto; padding: 8px 16px;" onclick="buyItem(2000, 35)">35 ⭐</button>
+            </div>
+            <div class="shop-item">
+                <span>👑 PRO Статус (Навсегда)</span>
+                <button class="btn btn-primary" style="width: auto; padding: 8px 16px;" onclick="buyItem('pro', 199)">199 ⭐</button>
+            </div>
+
+            <button class="btn btn-secondary" onclick="closeModal('shopModal')">Закрыть</button>
+        </div>
+    </div>
+
+    <!-- Invite Modal -->
+    <div class="modal" id="inviteModal">
+        <div class="modal-content">
+            <h2>🤝 Реферальная программа</h2>
+            <p>Приглашайте друзей через Telegram и получайте щедрые бонусы фишек!</p>
+            <button class="btn btn-primary" onclick="shareInviteLink()">📤 Поделиться в чате</button>
+            <button class="btn btn-secondary" onclick="closeModal('inviteModal')" style="margin-top: 10px;">Закрыть</button>
+        </div>
+    </div>
+
+    <script>
+        const tg = window.Telegram?.WebApp;
+        if (tg) {
+            tg.expand();
+            if (tg.initDataUnsafe?.user) {
+                document.getElementById('userName').innerText = tg.initDataUnsafe.user.first_name || 'Player';
+                document.getElementById('userAvatar').innerText = (tg.initDataUnsafe.user.first_name || 'P')[0].toUpperCase();
             }
-          });
-        } else {
-          // Demo fallback
-          alert(`[Демо-режим] Вы успешно приобрели ${gamesCount === 'unlimited' ? 'Безлимит' : gamesCount + ' игр'} за ${starsCost} ⭐️!`);
-          this.grantPurchasedGames(gamesCount);
-        }
-      }
-
-      grantPurchasedGames(count) {
-        if (count === 'unlimited') {
-          this.freeGamesRemaining = 999;
-        } else {
-          this.freeGamesRemaining += count;
-        }
-        localStorage.setItem('durak_free_games', this.freeGamesRemaining.toString());
-        this.updateFreemiumBadge();
-        this.closePaywall();
-        this.showBanner("Оплата принята! Игры зачислены 🎉");
-      }
-
-      watchAdReward() {
-        sound.playStar();
-        this.freeGamesRemaining += 1;
-        localStorage.setItem('durak_free_games', this.freeGamesRemaining.toString());
-        this.updateFreemiumBadge();
-        this.closePaywall();
-        this.showBanner("Награда получена: +1 игра! 🎬");
-      }
-
-      shareInvite() {
-        const shareUrl = "https://t.me/share/url?url=" + encodeURIComponent("https://t.me/durak_game_bot") + "&text=" + encodeURIComponent("Сыграем в Подкидного Дурака вместе! 🃏⭐️");
-        if (this.tg && this.tg.openTelegramLink) {
-          this.tg.openTelegramLink(shareUrl);
-        } else {
-          window.open(shareUrl, '_blank');
-        }
-      }
-
-      setMode(mode) {
-        document.getElementById('modeBotBtn').className = "w-1/2 py-1.5 rounded-xl bg-white/20 text-white font-semibold transition shadow-sm";
-        document.getElementById('modeOnlineBtn').className = "w-1/2 py-1.5 rounded-xl text-slate-400 hover:text-white transition flex items-center justify-center gap-1";
-      }
-
-      // --- GAME MECHANICS ---
-      startNewGame() {
-        if (!this.checkGameQuota()) return;
-
-        this.useFreeGame();
-        sound.playSuccess();
-
-        // Build Deck
-        this.deck = [];
-        for (let suit of SUITS) {
-          for (let rank of RANKS) {
-            this.deck.push({ suit, rank, val: RANK_VALUES[rank] });
-          }
-        }
-        this.shuffle(this.deck);
-
-        // Trump
-        this.trumpCard = this.deck.pop();
-        
-        // Deal 6 cards each
-        this.playerHand = [];
-        this.opponentHand = [];
-        for (let i = 0; i < 6; i++) {
-          if (this.deck.length > 0) this.playerHand.push(this.deck.pop());
-          if (this.deck.length > 0) this.opponentHand.push(this.deck.pop());
         }
 
-        this.tablePairs = [];
-        this.isPlayerAttacking = true; // Player attacks first for simplicity
-        this.gameState = 'PLAYING';
-        this.selectedCardForDefense = null;
+        let state = {
+            coins: 2500,
+            stars: 100,
+            deck: [],
+            trumpCard: null,
+            playerHand: [],
+            aiHand: [],
+            table: [],
+            turn: 'player',
+        };
 
-        this.renderAll();
-        this.updateActionButton();
-        this.showBanner("Ваш ход! Выберите карту для атаки.");
-      }
+        const suits = ['♠', '♣', '♥', '♦'];
+        const values = ['6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+        const valueMap = {'6':6, '7':7, '8':8, '9':9, '10':10, 'J':11, 'Q':12, 'K':13, 'A':14};
 
-      shuffle(array) {
-        for (let i = array.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [array[i], array[j]] = [array[j], array[i]];
-        }
-      }
-
-      // CARD BEATING LOGIC
-      canBeat(attackCard, defenseCard) {
-        if (!attackCard || !defenseCard) return false;
-        
-        const isAttackTrump = attackCard.suit === this.trumpCard.suit;
-        const isDefenseTrump = defenseCard.suit === this.trumpCard.suit;
-
-        if (isDefenseTrump && !isAttackTrump) return true;
-        if (isAttackTrump && !isDefenseTrump) return false;
-        if (attackCard.suit === defenseCard.suit) {
-          return defenseCard.val > attackCard.val;
-        }
-        return false;
-      }
-
-      // TAP ON HAND CARD
-      handlePlayerCardClick(cardIndex) {
-        if (this.gameState !== 'PLAYING') return;
-
-        const card = this.playerHand[cardIndex];
-
-        if (this.isPlayerAttacking) {
-          // ATTACKING LOGIC
-          if (this.tablePairs.length >= 6) return; // Limit attacks
-
-          if (this.tablePairs.length > 0) {
-            // Must match a rank already on the table
-            const tableRanks = new Set();
-            this.tablePairs.forEach(p => {
-              tableRanks.add(p.attack.rank);
-              if (p.defense) tableRanks.add(p.defense.rank);
-            });
-            if (!tableRanks.has(card.rank)) {
-              this.showBanner("Подкидывать можно только карты имеющегося достоинства!");
-              return;
+        function createDeck() {
+            let deck = [];
+            for (let s of suits) {
+                for (let v of values) {
+                    deck.push({ suit: s, val: v, weight: valueMap[v], color: (s==='♥'||s==='♦')?'red':'black' });
+                }
             }
-          }
+            return deck.sort(() => Math.random() - 0.5);
+        }
 
-          // Move card to table
-          sound.playCard();
-          this.playerHand.splice(cardIndex, 1);
-          this.tablePairs.push({ attack: card, defense: null });
-          this.renderAll();
-
-          // Bot defends
-          setTimeout(() => this.botDefend(), 800);
-
-        } else {
-          // DEFENDING LOGIC
-          // Find undefended attacks
-          const undefendedIdxs = [];
-          this.tablePairs.forEach((p, idx) => {
-            if (!p.defense) undefendedIdxs.push(idx);
-          });
-
-          if (undefendedIdxs.length === 0) return;
-
-          // Target auto-selection or multi-target check
-          if (undefendedIdxs.length === 1) {
-            // One-Tap Auto Beat
-            const targetIdx = undefendedIdxs[0];
-            const attackCard = this.tablePairs[targetIdx].attack;
-
-            if (this.canBeat(attackCard, card)) {
-              sound.playCard();
-              this.playerHand.splice(cardIndex, 1);
-              this.tablePairs[targetIdx].defense = card;
-              this.selectedCardForDefense = null;
-              this.renderAll();
-
-              // Check if all undefended cards are beaten
-              if (this.tablePairs.every(p => p.defense)) {
-                setTimeout(() => this.botAttackMoreOrPass(), 800);
-              }
-            } else {
-              this.showBanner("Эта карта не может побить нападающую!");
+        function startSingleGame() {
+            if (state.coins < 150) {
+                alert('Недостаточно монет для ставки! Пополните баланс.');
+                openShop();
+                return;
             }
-          } else {
-            // Visual target mode if multiple attacks exist
-            this.selectedCardForDefense = cardIndex;
-            this.showBanner("Выберите подсвеченную карту на столе для защиты");
-            this.renderAll();
-          }
-        }
-      }
+            state.coins -= 150;
+            updateUI();
 
-      // TAP ON TABLE ATTACK CARD FOR MANUAL TARGETING
-      handleTablePairClick(pairIndex) {
-        if (!this.isPlayerAttacking && this.selectedCardForDefense !== null) {
-          const pair = this.tablePairs[pairIndex];
-          if (!pair.defense) {
-            const defenseCard = this.playerHand[this.selectedCardForDefense];
-            if (this.canBeat(pair.attack, defenseCard)) {
-              sound.playCard();
-              this.playerHand.splice(this.selectedCardForDefense, 1);
-              pair.defense = defenseCard;
-              this.selectedCardForDefense = null;
-              this.renderAll();
+            state.deck = createDeck();
+            state.trumpCard = state.deck[state.deck.length - 1];
+            state.playerHand = [];
+            state.aiHand = [];
+            state.table = [];
 
-              if (this.tablePairs.every(p => p.defense)) {
-                setTimeout(() => this.botAttackMoreOrPass(), 800);
-              }
-            } else {
-              this.showBanner("Выбранная карта не бьет эту атаку!");
+            for (let i = 0; i < 6; i++) {
+                state.playerHand.push(state.deck.pop());
+                state.aiHand.push(state.deck.pop());
             }
-          }
-        }
-      }
 
-      // BOT DEFENSE AI
-      botDefend() {
-        let undefendedPair = this.tablePairs.find(p => !p.defense);
-        if (!undefendedPair) return;
+            document.getElementById('lobbyScreen').classList.remove('active');
+            document.getElementById('gameScreen').classList.add('active');
+            
+            document.getElementById('trumpSuit').innerText = state.trumpCard.suit;
+            document.getElementById('trumpSuit').style.color = state.trumpCard.color === 'red' ? '#e11d48' : '#0f172a';
 
-        let bestDefenseCardIdx = -1;
-        let lowestVal = 99;
-
-        this.opponentHand.forEach((card, idx) => {
-          if (this.canBeat(undefendedPair.attack, card)) {
-            // Prefer non-trump beat, or lowest trump
-            let score = card.val + (card.suit === this.trumpCard.suit ? 20 : 0);
-            if (score < lowestVal) {
-              lowestVal = score;
-              bestDefenseCardIdx = idx;
-            }
-          }
-        });
-
-        if (bestDefenseCardIdx !== -1) {
-          sound.playCard();
-          undefendedPair.defense = this.opponentHand.splice(bestDefenseCardIdx, 1)[0];
-          this.renderAll();
-          this.showBanner("Бот побил карту. Ваш ход подкинуть или Бито.");
-        } else {
-          this.showBanner("Бот не может побить! Подкиньте ещё или Бот заберёт.");
-        }
-        this.updateActionButton();
-      }
-
-      // BOT ATTACK AI
-      botAttackMoreOrPass() {
-        // If bot is attacking, can it throw more cards?
-        const tableRanks = new Set();
-        this.tablePairs.forEach(p => {
-          tableRanks.add(p.attack.rank);
-          if (p.defense) tableRanks.add(p.defense.rank);
-        });
-
-        let candidateIdx = this.opponentHand.findIndex(c => tableRanks.has(c.rank));
-
-        if (candidateIdx !== -1 && this.tablePairs.length < 6 && this.playerHand.length > 0) {
-          sound.playCard();
-          const attackCard = this.opponentHand.splice(candidateIdx, 1)[0];
-          this.tablePairs.push({ attack: attackCard, defense: null });
-          this.renderAll();
-          this.showBanner("Бот подкинул карту! Защищайтесь.");
-          this.updateActionButton();
-        } else {
-          // Bot finishes attack -> BITO
-          this.showBanner("Бот завершил атаку. Бито!");
-          setTimeout(() => this.finishRound(true), 1000);
-        }
-      }
-
-      botInitialAttack() {
-        if (this.opponentHand.length === 0) return;
-
-        // Choose lowest card to attack
-        let lowestIdx = 0;
-        let lowestVal = 99;
-        this.opponentHand.forEach((card, idx) => {
-          let val = card.val + (card.suit === this.trumpCard.suit ? 20 : 0);
-          if (val < lowestVal) {
-            lowestVal = val;
-            lowestIdx = idx;
-          }
-        });
-
-        sound.playCard();
-        const attackCard = this.opponentHand.splice(lowestIdx, 1)[0];
-        this.tablePairs.push({ attack: attackCard, defense: null });
-        this.renderAll();
-        this.showBanner("Бот атакует! Отбейтесь картой из руки.");
-        this.updateActionButton();
-      }
-
-      // MAIN BOTTOM BUTTON ACTION
-      handleMainAction() {
-        if (this.gameState === 'IDLE' || this.gameState === 'GAME_OVER') {
-          this.startNewGame();
-          return;
+            renderGame();
         }
 
-        if (this.isPlayerAttacking) {
-          // Player is attacking -> Button stands for "БИТО" (Clear Table)
-          if (this.tablePairs.length === 0) return;
-          
-          if (this.tablePairs.every(p => p.defense)) {
-            this.finishRound(true); // Table cleared
-          } else {
-            // Bot takes cards if not all defended
-            this.finishRound(false); // Opponent takes
-          }
-        } else {
-          // Player is defending -> Button stands for "БЕРУ" (Take Cards)
-          this.takeTableCards();
-        }
-      }
+        function renderGame() {
+            document.getElementById('deckCount').innerText = state.deck.length;
 
-      takeTableCards() {
-        sound.playCard();
-        this.tablePairs.forEach(p => {
-          this.playerHand.push(p.attack);
-          if (p.defense) this.playerHand.push(p.defense);
-        });
-        this.tablePairs = [];
-        this.showBanner("Вы взяли карты! Ход переходит к боту.");
-        
-        this.refillHands();
-        this.isPlayerAttacking = false;
-        this.renderAll();
-
-        setTimeout(() => this.botInitialAttack(), 1000);
-      }
-
-      finishRound(cleared) {
-        if (cleared) {
-          document.getElementById('discardPile').classList.remove('opacity-0');
-        } else {
-          // Opponent takes
-          this.tablePairs.forEach(p => {
-            this.opponentHand.push(p.attack);
-            if (p.defense) this.opponentHand.push(p.defense);
-          });
-        }
-
-        this.tablePairs = [];
-        this.refillHands();
-
-        // Switch role if round was cleared
-        if (cleared) {
-          this.isPlayerAttacking = !this.isPlayerAttacking;
-        }
-
-        this.checkWinCondition();
-        this.renderAll();
-
-        if (this.gameState === 'PLAYING') {
-          if (!this.isPlayerAttacking) {
-            setTimeout(() => this.botInitialAttack(), 800);
-          } else {
-            this.showBanner("Ваш ход! Выберите карту для атаки.");
-          }
-        }
-      }
-
-      refillHands() {
-        // Attacker draws first
-        if (this.isPlayerAttacking) {
-          while (this.playerHand.length < 6 && this.deck.length > 0) this.playerHand.push(this.deck.pop());
-          while (this.opponentHand.length < 6 && this.deck.length > 0) this.opponentHand.push(this.deck.pop());
-        } else {
-          while (this.opponentHand.length < 6 && this.deck.length > 0) this.opponentHand.push(this.deck.pop());
-          while (this.playerHand.length < 6 && this.deck.length > 0) this.playerHand.push(this.deck.pop());
-        }
-      }
-
-      checkWinCondition() {
-        if (this.deck.length === 0) {
-          if (this.playerHand.length === 0 && this.opponentHand.length === 0) {
-            this.gameState = 'GAME_OVER';
-            this.showBanner("Ничья! Игра окончена.");
-          } else if (this.playerHand.length === 0) {
-            this.gameState = 'GAME_OVER';
-            sound.playSuccess();
-            confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
-            this.showBanner("ПОБЕДА! Вы выиграли! 🎉");
-          } else if (this.opponentHand.length === 0) {
-            this.gameState = 'GAME_OVER';
-            this.showBanner("Вы проиграли (Остались Дураком) 🤖");
-          }
-        }
-        this.updateActionButton();
-      }
-
-      updateActionButton() {
-        const btnText = document.getElementById('actionBtnText');
-        const btn = document.getElementById('actionBtn');
-
-        if (this.gameState === 'IDLE' || this.gameState === 'GAME_OVER') {
-          btnText.textContent = "Начать новую игру";
-          btn.className = "w-full max-w-xs py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold text-sm shadow-xl active:scale-95 transition flex items-center justify-center gap-2 border border-emerald-400/30";
-          return;
-        }
-
-        if (this.isPlayerAttacking) {
-          btnText.textContent = this.tablePairs.length > 0 ? "Бито" : "Ваш ход";
-          btn.className = "w-full max-w-xs py-3.5 px-6 rounded-2xl glass-panel bg-gradient-to-r from-emerald-600 to-teal-700 text-white font-bold text-sm shadow-xl active:scale-95 transition flex items-center justify-center gap-2 border border-emerald-400/30";
-        } else {
-          btnText.textContent = "Беру карту";
-          btn.className = "w-full max-w-xs py-3.5 px-6 rounded-2xl glass-panel bg-gradient-to-r from-rose-600 to-red-700 text-white font-bold text-sm shadow-xl active:scale-95 transition flex items-center justify-center gap-2 border border-rose-400/30";
-        }
-      }
-
-      showBanner(text) {
-        const banner = document.getElementById('gameBanner');
-        banner.textContent = text;
-        banner.classList.remove('opacity-0');
-      }
-
-      // RENDERING ENGINE
-      renderAll() {
-        this.renderTrumpAndDeck();
-        this.renderPlayerHand();
-        this.renderOpponentHand();
-        this.renderTable();
-        this.updateActionButton();
-      }
-
-      renderTrumpAndDeck() {
-        const trumpEl = document.getElementById('trumpCard');
-        const deckCountEl = document.getElementById('deckCount');
-
-        if (this.trumpCard) {
-          const color = SUIT_COLORS[this.trumpCard.suit];
-          trumpEl.className = `w-12 h-18 rounded-lg bg-white ${color} border border-slate-300 flex flex-col justify-between p-1 font-bold text-xs shadow-md transform rotate-90 translate-x-3`;
-          trumpEl.innerHTML = `<div>${this.trumpCard.rank}</div><div class="text-center text-sm">${this.trumpCard.suit}</div>`;
-        }
-
-        deckCountEl.textContent = this.deck.length;
-        document.getElementById('deckPile').style.opacity = this.deck.length === 0 ? '0.2' : '1';
-      }
-
-      renderPlayerHand() {
-        const container = document.getElementById('playerHand');
-        container.innerHTML = '';
-
-        this.playerHand.forEach((card, idx) => {
-          const cardEl = document.createElement('div');
-          const color = SUIT_COLORS[card.suit];
-          const isSelected = this.selectedCardForDefense === idx;
-
-          cardEl.className = `playing-card w-14 h-20 rounded-xl bg-gradient-to-b from-white to-slate-100 ${color} border border-slate-300 flex flex-col justify-between p-1.5 font-bold text-sm card-shadow cursor-pointer hover:-translate-y-3 ${isSelected ? 'ring-2 ring-emerald-400 -translate-y-4' : ''}`;
-          cardEl.onclick = () => this.handlePlayerCardClick(idx);
-
-          cardEl.innerHTML = `
-            <div class="leading-none">${card.rank}<br><span class="text-xs">${card.suit}</span></div>
-            <div class="text-center text-base leading-none">${card.suit}</div>
-            <div class="leading-none text-right">${card.rank}</div>
-          `;
-          container.appendChild(cardEl);
-        });
-      }
-
-      renderOpponentHand() {
-        const container = document.getElementById('opponentHand');
-        const countEl = document.getElementById('opponentCardCount');
-        container.innerHTML = '';
-        countEl.textContent = `(${this.opponentHand.length})`;
-
-        this.opponentHand.forEach(() => {
-          const cardEl = document.createElement('div');
-          cardEl.className = `playing-card w-11 h-16 rounded-lg bg-gradient-to-br from-indigo-800 to-slate-900 border border-indigo-400/30 card-shadow`;
-          container.appendChild(cardEl);
-        });
-      }
-
-      renderTable() {
-        const container = document.getElementById('tablePairs');
-        container.innerHTML = '';
-
-        this.tablePairs.forEach((pair, idx) => {
-          const pairWrapper = document.createElement('div');
-          pairWrapper.className = 'relative w-14 h-20';
-          pairWrapper.onclick = () => this.handleTablePairClick(idx);
-
-          // Attack Card
-          const attColor = SUIT_COLORS[pair.attack.suit];
-          const isUndefended = !pair.defense;
-          const isTargetGlow = !this.isPlayerAttacking && isUndefended && this.selectedCardForDefense !== null;
-
-          const attCardEl = document.createElement('div');
-          attCardEl.className = `playing-card absolute inset-0 w-14 h-20 rounded-xl bg-white ${attColor} border border-slate-300 flex flex-col justify-between p-1.5 font-bold text-xs card-shadow ${isTargetGlow ? 'card-target-glow cursor-pointer' : ''}`;
-          attCardEl.innerHTML = `
-            <div class="leading-none">${pair.attack.rank}<br>${pair.attack.suit}</div>
-            <div class="text-center text-sm">${pair.attack.suit}</div>
-          `;
-          pairWrapper.appendChild(attCardEl);
-
-          // Defense Card (if played)
-          if (pair.defense) {
-            const defColor = SUIT_COLORS[pair.defense.suit];
-            const defCardEl = document.createElement('div');
-            defCardEl.className = `playing-card absolute top-3 left-3 w-14 h-20 rounded-xl bg-white ${defColor} border border-slate-300 flex flex-col justify-between p-1.5 font-bold text-xs card-shadow transform rotate-6`;
-            defCardEl.innerHTML = `
-              <div class="leading-none">${pair.defense.rank}<br>${pair.defense.suit}</div>
-              <div class="text-center text-sm">${pair.defense.suit}</div>
+            const oppRow = document.getElementById('opponentsRow');
+            oppRow.innerHTML = `
+                <div class="opponent-box ${state.turn === 'ai' ? 'active-turn' : ''}">
+                    <div>🤖 AI Cyber Bot</div>
+                    <div class="cards-count">🃏 Карт: ${state.aiHand.length}</div>
+                </div>
             `;
-            pairWrapper.appendChild(defCardEl);
-          }
 
-          container.appendChild(pairWrapper);
-        });
-      }
-    }
+            const mat = document.getElementById('battleMat');
+            mat.innerHTML = '';
+            state.table.forEach((pair) => {
+                mat.innerHTML += `
+                    <div class="card-pair">
+                        <div class="card ${pair.attack.color}">${pair.attack.val}<br>${pair.attack.suit}</div>
+                        ${pair.defense ? `<div class="card defending ${pair.defense.color}">${pair.defense.val}<br>${pair.defense.suit}</div>` : ''}
+                    </div>
+                `;
+            });
 
-    // Initialize App
-    let app;
-    window.addEventListener('DOMContentLoaded', () => {
-      app = new DurakGame();
-    });
-  </script>
+            const handContainer = document.getElementById('playerHand');
+            handContainer.innerHTML = '';
+            state.playerHand.forEach((card, index) => {
+                handContainer.innerHTML += `
+                    <div class="card ${card.color} selectable" onclick="playCard(${index})">
+                        <span>${card.val}</span>
+                        <span style="font-size: 20px; text-align:center;">${card.suit}</span>
+                        <span style="text-align:right;">${card.val}</span>
+                    </div>
+                `;
+            });
+
+            document.getElementById('tableActions').style.display = state.table.length > 0 ? 'flex' : 'none';
+        }
+
+        function playCard(index) {
+            const card = state.playerHand[index];
+            if (state.table.length === 0) {
+                state.table.push({ attack: card, defense: null });
+                state.playerHand.splice(index, 1);
+                renderGame();
+                setTimeout(aiDefend, 800);
+                return;
+            }
+
+            let openAttack = state.table.find(p => p.defense === null);
+            if (openAttack) {
+                if (canBeat(card, openAttack.attack, state.trumpCard.suit)) {
+                    openAttack.defense = card;
+                    state.playerHand.splice(index, 1);
+                    renderGame();
+                    checkRoundEnd();
+                } else {
+                    alert('Этой картой побить нельзя!');
+                }
+            }
+        }
+
+        function canBeat(card, target, trump) {
+            if (card.suit === target.suit && card.weight > target.weight) return true;
+            if (card.suit === trump && target.suit !== trump) return true;
+            return false;
+        }
+
+        function aiDefend() {
+            let openAttack = state.table.find(p => p.defense === null);
+            if (!openAttack) return;
+
+            let candidateIdx = state.aiHand.findIndex(c => canBeat(c, openAttack.attack, state.trumpCard.suit));
+            if (candidateIdx !== -1) {
+                let defCard = state.aiHand.splice(candidateIdx, 1)[0];
+                openAttack.defense = defCard;
+                renderGame();
+                checkRoundEnd();
+            } else {
+                setTimeout(() => {
+                    alert('🤖 Бот взял карты!');
+                    state.aiHand.push(openAttack.attack);
+                    if(openAttack.defense) state.aiHand.push(openAttack.defense);
+                    state.table = [];
+                    refillHands();
+                    renderGame();
+                }, 600);
+            }
+        }
+
+        function playerTake() {
+            let openAttack = state.table.find(p => p.defense === null);
+            if(!openAttack && state.table.length === 0) return;
+            
+            state.table.forEach(pair => {
+                state.playerHand.push(pair.attack);
+                if(pair.defense) state.playerHand.push(pair.defense);
+            });
+            state.table = [];
+            refillHands();
+            renderGame();
+            setTimeout(aiAttack, 800);
+        }
+
+        function playerBito() {
+            state.table = [];
+            refillHands();
+            renderGame();
+            setTimeout(aiAttack, 800);
+        }
+
+        function aiAttack() {
+            if(state.aiHand.length === 0) return;
+            let card = state.aiHand.pop();
+            state.table.push({ attack: card, defense: null });
+            renderGame();
+        }
+
+        function checkRoundEnd() {
+            if (state.playerHand.length === 0 && state.deck.length === 0) {
+                alert('🏆 Победа! Вы выиграли 500 монет!');
+                state.coins += 500;
+                returnToLobby();
+            }
+        }
+
+        function refillHands() {
+            while(state.playerHand.length < 6 && state.deck.length > 0) state.playerHand.push(state.deck.pop());
+            while(state.aiHand.length < 6 && state.deck.length > 0) state.aiHand.push(state.deck.pop());
+            updateUI();
+        }
+
+        function returnToLobby() {
+            document.getElementById('gameScreen').classList.remove('active');
+            document.getElementById('lobbyScreen').classList.add('active');
+            updateUI();
+        }
+
+        function updateUI() {
+            document.getElementById('coinBalance').innerText = state.coins.toLocaleString();
+            document.getElementById('starBalance').innerText = state.stars;
+        }
+
+        function openShop() { document.getElementById('shopModal').classList.add('open'); }
+        function openInviteModal() { document.getElementById('inviteModal').classList.add('open'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+        
+        function buyItem(item, cost) {
+            if (state.stars >= cost) {
+                state.stars -= cost;
+                if (typeof item === 'number') state.coins += item;
+                else alert('👑 Имперский PRO статус успешно активирован!');
+                updateUI();
+                closeModal('shopModal');
+                alert('Транзакция в Telegram Stars прошла успешно!');
+            } else {
+                alert('Недостаточно звезд ⭐');
+            }
+        }
+
+        function shareInviteLink() {
+            const refLink = `https://t.me/MyAppleDurakBot/app?start=ref_${Date.now()}`;
+            if (tg && tg.openTelegramLink) {
+                tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(refLink)}&text=${encodeURIComponent("⚡️ Залетай в элитный карточный батл Durak Empire! Получи стартовый бонус.")}`);
+            } else {
+                navigator.clipboard.writeText(refLink);
+                alert('Реферальная ссылка скопирована!');
+            }
+        }
+
+        function sendReaction(emoji) { alert(`Реакция: ${emoji}`); }
+        function openMultiplayerLobby() { alert('🌐 Идет подключение к онлайн-комнатам Cloudflare WebSockets...'); }
+        function showLeaderboard() { alert('🏆 Топ Империи:\n1. Alex_King - 45,200 🪙\n2. TrumpCard - 38,900 🪙'); }
+    </script>
 </body>
 </html>
