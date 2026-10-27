@@ -4,6 +4,7 @@ import { DurableObject } from 'cloudflare:workers';
 const PRIZES = [10000, 5000, 2500]; // монеты за 1-е, 2-е, 3-е место
 const ACTIVE = 500;                 // награда активным игрокам
 const ACTMIN = 20;                  // сколько партий за месяц считается активностью
+const PACKS = [[2000, 35], [6000, 90], [15000, 200]]; // [монеты, Telegram Stars]
 const BOTCAP = 10;                  // партий с ботом в день, идущих в активность
 const CORS = { 'access-control-allow-origin': '*', 'access-control-allow-headers': 'content-type', 'access-control-allow-methods': 'GET,POST,OPTIONS' };
 const J = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { ...CORS, 'content-type': 'application/json' } });
@@ -25,6 +26,20 @@ export default {
       if (!usr) return J({ error: 'auth' }, 401);
       if (u.pathname === '/api/bot') { await stats(env).bot(usr.id, usr.name); return J({ ok: 1 }); }
       return J(await stats(env).me(usr.id, usr.name));
+    }
+    if (u.pathname === '/api/invoice') { // счёт на оплату Telegram Stars
+      const b = await req.json().catch(() => ({}));
+      const usr = await verify(b.init, env);
+      if (!usr) return J({ error: 'auth' }, 401);
+      const k = Number(b.pack), pk = PACKS[k];
+      if (!pk) return J({ error: 'pack' }, 400);
+      const r = await tg(env, 'createInvoiceLink', {
+        title: 'Монеты Империи', description: pk[0] + ' монет для Durak Empire',
+        payload: JSON.stringify({ k, u: usr.id }), provider_token: '', currency: 'XTR',
+        prices: [{ label: pk[0] + ' монет', amount: pk[1] }],
+      });
+      const j = await r.json();
+      return j.ok ? J({ link: j.result }) : J({ error: j.description }, 502);
     }
     if (u.pathname === '/admin/payout' && u.searchParams.get('key') === env.WEBHOOK_SECRET)
       return J(await payout(env, u.searchParams.get('m')));
@@ -53,8 +68,27 @@ async function tg(env, method, body) {
 }
 
 async function bot(up, env) {
+  // Stars: подтверждаем заказ перед оплатой
+  if (up.pre_checkout_query) {
+    const q = up.pre_checkout_query;
+    let ok = false;
+    try { const p = JSON.parse(q.invoice_payload), pk = PACKS[p.k]; ok = !!pk && q.currency === 'XTR' && q.total_amount === pk[1] && String(q.from.id) === p.u; } catch (_) {}
+    await tg(env, 'answerPreCheckoutQuery', ok ? { pre_checkout_query_id: q.id, ok: true } : { pre_checkout_query_id: q.id, ok: false, error_message: 'Ошибка заказа' });
+    return;
+  }
   const m = up.message;
-  if (!m || !m.text || !m.text.startsWith('/start')) return;
+  if (!m) return;
+  // Stars: оплата прошла — копим монеты игроку (он получит их при входе в игру)
+  if (m.successful_payment) {
+    const sp = m.successful_payment;
+    let p; try { p = JSON.parse(sp.invoice_payload); } catch (_) { return; }
+    const pk = PACKS[p.k];
+    if (!pk || sp.currency !== 'XTR' || sp.total_amount !== pk[1]) return;
+    await stats(env).buy(String(m.from.id), pk[0], '💎 Покупка: ' + pk[0] + ' монет', sp.telegram_payment_charge_id);
+    await tg(env, 'sendMessage', { chat_id: m.chat.id, text: '💎 Спасибо за покупку! ' + pk[0] + ' 🪙 уже ждут вас в игре.' });
+    return;
+  }
+  if (!m.text || !m.text.startsWith('/start')) return;
   const room = (m.text.split(' ')[1] || '').replace(/[^\w-]/g, '');
   const url = env.WEBAPP_URL + (room ? '?room=' + room : '');
   await tg(env, 'sendMessage', {
@@ -92,6 +126,7 @@ export class Stats extends DurableObject {
     this.sql.exec(`CREATE TABLE IF NOT EXISTS st(m TEXT,id TEXT,name TEXT,w INT DEFAULT 0,g INT DEFAULT 0,d TEXT DEFAULT '',bd INT DEFAULT 0,PRIMARY KEY(m,id))`);
     this.sql.exec(`CREATE TABLE IF NOT EXISTS pend(id TEXT PRIMARY KEY,coins INT DEFAULT 0,note TEXT DEFAULT '')`);
     this.sql.exec(`CREATE TABLE IF NOT EXISTS paid(m TEXT PRIMARY KEY)`);
+    this.sql.exec(`CREATE TABLE IF NOT EXISTS pay(cid TEXT PRIMARY KEY)`);
   }
   mk() { return new Date().toISOString().slice(0, 7); }
   touch(id, name) {
@@ -118,6 +153,11 @@ export class Stats extends DurableObject {
     const p = this.sql.exec('SELECT coins,note FROM pend WHERE id=?', id).toArray()[0];
     if (p) this.sql.exec('DELETE FROM pend WHERE id=?', id);
     return { m, w: r.w, g: r.g, rank, award: p ? p.coins : 0, note: p ? p.note : '' };
+  }
+  buy(id, coins, note, cid) { // покупка за Stars; cid защищает от двойного начисления
+    if (this.sql.exec('SELECT 1 FROM pay WHERE cid=?', cid).toArray().length) return;
+    this.sql.exec('INSERT INTO pay(cid) VALUES(?)', cid);
+    this.sql.exec(`INSERT INTO pend(id,coins,note) VALUES(?,?,?) ON CONFLICT(id) DO UPDATE SET coins=coins+excluded.coins,note=note||' · '||excluded.note`, id, coins, note);
   }
   top() {
     return this.sql.exec('SELECT name,w,g FROM st WHERE m=? AND w>0 ORDER BY w DESC,g ASC LIMIT 10', this.mk()).toArray();
