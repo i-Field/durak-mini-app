@@ -137,7 +137,7 @@ let PVP=false,ws=null;const WS='wss://YOUR-WORKER.workers.dev',BOT='durak_empire
 const SRV=WS.includes('YOUR-WORKER')?'':WS.replace('wss://','https://');
 const esc=t=>String(t).replace(/[&<>"']/g,c=>'&#'+c.charCodeAt(0)+';');
 const post=(p,b)=>fetch(SRV+p,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(Object.assign({init:(tg&&tg.initData)||''},b||{}))}).then(r=>r.json());
-function sync(){if(!SRV||!(tg&&tg.initData))return;post('/api/me').then(j=>{if(j.error)return;save.sv=j;if(j.award>0){save.coins+=j.award;persist();confetti();modal('<h2>🏆 Награда!</h2><p>'+esc(j.note)+'</p><p style="color:var(--gold);font-size:24px"><b>+'+j.award.toLocaleString('ru')+' 🪙</b></p><button class="btn" onclick="closeM()">Забрать!</button>')}persist();hud()}).catch(()=>{})}
+function sync(){if(!SRV||!(tg&&tg.initData))return;post('/api/me').then(j=>{if(j.error)return;save.sv=j;if(j.award>0){save.coins+=j.award;persist();confetti();modal('<h2>'+(String(j.note).includes('💎')?'💎 Покупка':'🏆 Награда!')+'</h2><p>'+esc(j.note)+'</p><p style="color:var(--gold);font-size:24px"><b>+'+j.award.toLocaleString('ru')+' 🪙</b></p><button class="btn" onclick="closeM()">Забрать!</button>')}persist();hud()}).catch(()=>{})}
 function report(){if(SRV&&tg&&tg.initData)post('/api/bot').catch(()=>{})}
 const rc=()=>Math.random().toString(36).slice(2,8).toUpperCase();
 function openOnline(){modal('<img alt="" style="width:100%;border-radius:12px" src="'+LB+'"><h2>🌐 Онлайн столы</h2><p>Создайте стол и отправьте ссылку другу или войдите по коду</p><button class="btn" onclick="pvpJoin(rc(),1)">➕ Создать стол (150 🪙)</button><input id="rcode" maxlength="12" placeholder="Код стола" style="padding:12px;border-radius:12px;border:0;background:#0004;color:inherit;font-size:16px;text-align:center"><button class="btn sec" onclick="pvpJoin($(\'rcode\').value.trim().toUpperCase())">Войти по коду</button><button class="btn sec" onclick="closeM()">Закрыть</button>')}
@@ -166,8 +166,8 @@ function ratingLocal(){const L=[['Император',420],['Шулер',310],['
 const PACKS=[[2000,35],[6000,90],[15000,200]];
 function openShop(){modal('<h2>💎 Магазин Империи</h2><p>Пополните баланс за Telegram Stars ⭐</p>'+PACKS.map((p,i)=>'<button class="btn" onclick="buy('+i+')">📦 '+p[0].toLocaleString('ru')+' монет ('+p[1]+' ⭐)</button>').join('')+'<button class="btn sec" onclick="closeM()">Закрыть</button>')}
 function buy(i){const p=PACKS[i],grant=()=>{save.coins+=p[0];persist();hud();closeM()};
- if(API&&tg&&tg.openInvoice){fetch(API+'/invoice?pack='+i+'&uid='+encodeURIComponent((tg.initDataUnsafe.user||{}).id)).then(r=>r.json()).then(j=>tg.openInvoice(j.link,s=>{if(s==='paid')grant()})).catch(()=>alert('Ошибка оплаты'))}
- else if(tg)alert('Оплата Stars пока не подключена к серверу бота.');else grant()}
+ if(SRV&&tg&&tg.initData&&tg.openInvoice){post('/api/invoice',{pack:i}).then(j=>{if(!j.link)throw 0;tg.openInvoice(j.link,st=>{if(st==='paid'){closeM();setTimeout(sync,1500);setTimeout(sync,5000)}})}).catch(()=>alert('Не удалось создать счёт. Попробуйте позже.'))}
+ else if(tg)alert('Сервер ещё не подключён: укажите адрес воркера в игре.');else grant()}
 /* ---------- game ---------- */
 let G=null;
 const val=c=>c.r+(c.s===G.trump?20:0),def=()=>G.att==='p'?'b':'p',undef=()=>G.table.filter(x=>!x.d);
