@@ -5,7 +5,8 @@ const PRIZES = [10000, 5000, 2500]; // монеты за 1-е, 2-е, 3-е мес
 const ACTIVE = 500;                 // награда активным игрокам
 const ACTMIN = 20;                  // сколько партий за месяц считается активностью
 const PACKS = [[2000, 35], [6000, 90], [15000, 200]]; // [монеты, Telegram Stars]
-const BOTCAP = 10;                  // партий с ботом в день, идущих в активность
+const BOTCAP = 10;
+const VERSION = '2026-10-27-health';                  // партий с ботом в день, идущих в активность
 const CORS = { 'access-control-allow-origin': '*', 'access-control-allow-headers': 'content-type', 'access-control-allow-methods': 'GET,POST,OPTIONS' };
 const J = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { ...CORS, 'content-type': 'application/json' } });
 const stats = env => env.STATS.get(env.STATS.idFromName('main'));
@@ -18,6 +19,16 @@ export default {
       const r = (u.searchParams.get('room') || '').slice(0, 16).replace(/[^\w-]/g, '');
       if (!r) return new Response('no room', { status: 400 });
       return env.ROOM.get(env.ROOM.idFromName(r)).fetch(req);
+    }
+    if (u.pathname === '/health') { // самопроверка настроек (секреты не показываются)
+      const out = { version: VERSION, BOT_TOKEN: !!env.BOT_TOKEN, WEBHOOK_SECRET: !!env.WEBHOOK_SECRET, WEBAPP_URL: env.WEBAPP_URL || null, ROOM: !!env.ROOM, STATS: !!env.STATS };
+      if (env.BOT_TOKEN) {
+        const me = await (await tg(env, 'getMe', {})).json().catch(() => ({}));
+        out.bot = me.ok ? '@' + me.result.username : 'ОШИБКА: ' + (me.description || 'нет ответа');
+        const wi = await (await tg(env, 'getWebhookInfo', {})).json().catch(() => ({}));
+        out.webhook = wi.ok ? { set: !!wi.result.url, pending: wi.result.pending_update_count, error: wi.result.last_error_message || null } : 'ошибка';
+      }
+      return J(out);
     }
     if (u.pathname === '/api/top') return J(await stats(env).top());
     if (u.pathname === '/api/me' || u.pathname === '/api/bot') {
@@ -53,7 +64,7 @@ export default {
       await bot(await req.json(), env);
       return new Response('ok');
     }
-    return new Response('Durak Empire server');
+    return new Response('Durak Empire server v' + VERSION);
   },
   // 1-го числа каждого месяца (cron в wrangler.toml): награждаем итоги прошлого месяца
   async scheduled(_ev, env, ctx) { ctx.waitUntil(payout(env)); },
