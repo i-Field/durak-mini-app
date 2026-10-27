@@ -133,7 +133,7 @@ function modal(html){$('mbox').innerHTML=html;$('modal').classList.remove('hidde
 function closeM(){$('modal').classList.add('hidden')}
 function show(id){if(id==='menu')leave();$('menu').classList.toggle('hidden',id!=='menu');$('game').classList.toggle('hidden',id!=='game');hud()}
 function daily(){save.coins+=500;save.bonus=new Date().toDateString();persist();hud()}
-let PVP=false,ws=null;const WS='wss://YOUR-WORKER.workers.dev',BOT='durak_empire_bot',O=()=>PVP?'Соперник':'Бот';
+let PVP=false,ws=null;const WS='wss://durak-mini-app.qx420.workers.dev',BOT='durak_empire_bot',O=()=>PVP?'Соперник':'Бот';
 const SRV=WS.includes('YOUR-WORKER')?'':WS.replace('wss://','https://');
 const esc=t=>String(t).replace(/[&<>"']/g,c=>'&#'+c.charCodeAt(0)+';');
 const post=(p,b)=>fetch(SRV+p,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(Object.assign({init:(tg&&tg.initData)||''},b||{}))}).then(r=>r.json());
