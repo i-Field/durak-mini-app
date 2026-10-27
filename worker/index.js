@@ -6,7 +6,8 @@ const ACTIVE = 500;                 // награда активным игро�
 const ACTMIN = 20;                  // сколько партий за месяц считается активностью
 const PACKS = [[2000, 35], [6000, 90], [15000, 200]]; // [монеты, Telegram Stars]
 const BOTCAP = 10;
-const VERSION = '2026-10-27-health';                  // партий с ботом в день, идущих в активность
+const VERSION = '2026-10-27-h2';
+const APP = env => env.WEBAPP_URL || 'https://i-field.github.io/durak-mini-app/';                  // партий с ботом в день, идущих в активность
 const CORS = { 'access-control-allow-origin': '*', 'access-control-allow-headers': 'content-type', 'access-control-allow-methods': 'GET,POST,OPTIONS' };
 const J = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { ...CORS, 'content-type': 'application/json' } });
 const stats = env => env.STATS.get(env.STATS.idFromName('main'));
@@ -21,7 +22,7 @@ export default {
       return env.ROOM.get(env.ROOM.idFromName(r)).fetch(req);
     }
     if (u.pathname === '/health') { // самопроверка настроек (секреты не показываются)
-      const out = { version: VERSION, BOT_TOKEN: !!env.BOT_TOKEN, WEBHOOK_SECRET: !!env.WEBHOOK_SECRET, WEBAPP_URL: env.WEBAPP_URL || null, ROOM: !!env.ROOM, STATS: !!env.STATS };
+      const out = { version: VERSION, BOT_TOKEN: !!env.BOT_TOKEN, WEBHOOK_SECRET: !!env.WEBHOOK_SECRET, WEBAPP_URL: APP(env), ROOM: !!env.ROOM, STATS: !!env.STATS };
       if (env.BOT_TOKEN) {
         const me = await (await tg(env, 'getMe', {})).json().catch(() => ({}));
         out.bot = me.ok ? '@' + me.result.username : 'ОШИБКА: ' + (me.description || 'нет ответа');
@@ -55,7 +56,7 @@ export default {
     if (u.pathname === '/admin/setup' && u.searchParams.get('key') === env.WEBHOOK_SECRET) { // подключить бота одним открытием ссылки
       if (!env.BOT_TOKEN) return J({ error: 'Секрет BOT_TOKEN не задан в Cloudflare' });
       const a = await (await tg(env, 'setWebhook', { url: u.origin + '/webhook/' + env.WEBHOOK_SECRET })).json();
-      const b = await (await tg(env, 'setChatMenuButton', { menu_button: { type: 'web_app', text: 'Играть', web_app: { url: env.WEBAPP_URL } } })).json();
+      const b = await (await tg(env, 'setChatMenuButton', { menu_button: { type: 'web_app', text: 'Играть', web_app: { url: APP(env) } } })).json();
       return J({ webhook: a, menu: b });
     }
     if (u.pathname === '/admin/payout' && u.searchParams.get('key') === env.WEBHOOK_SECRET)
@@ -107,7 +108,7 @@ async function bot(up, env) {
   }
   if (!m.text || !m.text.startsWith('/start')) return;
   const room = (m.text.split(' ')[1] || '').replace(/[^\w-]/g, '');
-  const url = env.WEBAPP_URL + (room ? '?room=' + room : '');
+  const url = APP(env) + (room ? '?room=' + room : '');
   await tg(env, 'sendMessage', {
     chat_id: m.chat.id,
     text: room ? '🃏 Вас пригласили за стол. Присоединяйтесь!' : '👑 Durak Empire — подкидной дурак',
