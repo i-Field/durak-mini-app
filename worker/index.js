@@ -41,6 +41,12 @@ export default {
       const j = await r.json();
       return j.ok ? J({ link: j.result }) : J({ error: j.description }, 502);
     }
+    if (u.pathname === '/admin/setup' && u.searchParams.get('key') === env.WEBHOOK_SECRET) { // подключить бота одним открытием ссылки
+      if (!env.BOT_TOKEN) return J({ error: 'Секрет BOT_TOKEN не задан в Cloudflare' });
+      const a = await (await tg(env, 'setWebhook', { url: u.origin + '/webhook/' + env.WEBHOOK_SECRET })).json();
+      const b = await (await tg(env, 'setChatMenuButton', { menu_button: { type: 'web_app', text: 'Играть', web_app: { url: env.WEBAPP_URL } } })).json();
+      return J({ webhook: a, menu: b });
+    }
     if (u.pathname === '/admin/payout' && u.searchParams.get('key') === env.WEBHOOK_SECRET)
       return J(await payout(env, u.searchParams.get('m')));
     if (req.method === 'POST' && u.pathname === '/webhook/' + env.WEBHOOK_SECRET) {
