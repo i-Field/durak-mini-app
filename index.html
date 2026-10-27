@@ -2,6 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Durak Empire</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
 :root{--bg:#101512;--felt:#22362c;--gold:#c2a265;--tx:#e6e1d3;--mut:#8fa196;--red:#a64a50;--blk:#22262a;--pan:#1a231e;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -124,7 +125,7 @@ let save={coins:2500,wins:0,losses:0,bonus:''};
 try{Object.assign(save,JSON.parse(localStorage.getItem('de')||'{}'))}catch(e){}
 const persist=()=>{try{localStorage.setItem('de',JSON.stringify(save))}catch(e){}};
 const tg=window.Telegram&&window.Telegram.WebApp;
-try{if(tg){tg.ready();tg.expand()}}catch(e){}
+try{if(tg){tg.ready();tg.expand();tg.setHeaderColor&&tg.setHeaderColor('#101512');tg.setBackgroundColor&&tg.setBackgroundColor('#101512');tg.disableVerticalSwipes&&tg.disableVerticalSwipes()}}catch(e){}
 const rating=()=>Math.max(0,100+save.wins*10-save.losses*5);
 function hud(){$('coins').textContent='🪙 '+save.coins.toLocaleString('ru');$('gc').textContent=$('coins').textContent;$('stars').textContent='⭐ '+rating();
  const u=tg&&tg.initDataUnsafe&&tg.initDataUnsafe.user;if(u&&u.first_name)$('nm').textContent=u.first_name;
@@ -166,8 +167,10 @@ function ratingLocal(){const L=[['Император',420],['Шулер',310],['
 const PACKS=[[2000,35],[6000,90],[15000,200]];
 function openShop(){modal('<h2>💎 Магазин Империи</h2><p>Пополните баланс за Telegram Stars ⭐</p>'+PACKS.map((p,i)=>'<button class="btn" onclick="buy('+i+')">📦 '+p[0].toLocaleString('ru')+' монет ('+p[1]+' ⭐)</button>').join('')+'<button class="btn sec" onclick="closeM()">Закрыть</button>')}
 function buy(i){const p=PACKS[i],grant=()=>{save.coins+=p[0];persist();hud();closeM()};
- if(SRV&&tg&&tg.initData&&tg.openInvoice){post('/api/invoice',{pack:i}).then(j=>{if(!j.link)throw 0;tg.openInvoice(j.link,st=>{if(st==='paid'){closeM();setTimeout(sync,1500);setTimeout(sync,5000)}})}).catch(()=>alert('Не удалось создать счёт. Попробуйте позже.'))}
- else if(tg)alert('Сервер ещё не подключён: укажите адрес воркера в игре.');else grant()}
+ if(!(tg&&tg.initData)){grant();return} // вне Telegram — демо-режим
+ if(!SRV)return alert('Сервер не подключён');
+ if(!tg.openInvoice)return alert('Обновите Telegram, чтобы платить звёздами');
+ post('/api/invoice',{pack:i}).then(j=>{if(!j.link)throw new Error(j.error||'нет ссылки на оплату');tg.openInvoice(j.link,st=>{if(st==='paid'){closeM();setTimeout(sync,1500);setTimeout(sync,5000)}})}).catch(e=>alert('Не удалось создать счёт: '+(e&&e.message||e)))}
 /* ---------- game ---------- */
 let G=null;
 const val=c=>c.r+(c.s===G.trump?20:0),def=()=>G.att==='p'?'b':'p',undef=()=>G.table.filter(x=>!x.d);
