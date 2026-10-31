@@ -4,6 +4,8 @@ compatibility_date = "2025-01-01"
 
 [vars]
 WEBAPP_URL = "https://i-field.github.io/durak-mini-app/"
+# Чтобы бот встречал видео вместо картинки: загрузите welcome.mp4 в репозиторий и уберите # ниже
+# WELCOME_VIDEO = "welcome.mp4"
 
 [[durable_objects.bindings]]
 name = "ROOM"
@@ -13,9 +15,18 @@ class_name = "Room"
 name = "STATS"
 class_name = "Stats"
 
+[[durable_objects.bindings]]
+name = "LOBBY"
+class_name = "Lobby"
+
 [[migrations]]
 tag = "v1"
 new_sqlite_classes = ["Room", "Stats"]
 
+[[migrations]]
+tag = "v2"
+new_sqlite_classes = ["Lobby"]
+
+# 1-го числа каждого месяца в 00:05 UTC — автоначисление наград за прошлый месяц
 [triggers]
 crons = ["5 0 1 * *"]
