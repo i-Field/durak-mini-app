@@ -1,14 +1,14 @@
 // Durak Empire — Cloudflare Worker: Telegram-бот, онлайн-столы (2–4 игрока), лобби, лига месяца, Stars
 import { DurableObject } from 'cloudflare:workers';
 
-const VERSION = '2026-10-28-v4';
+const VERSION = '2026-10-29-v5';
 const APP = env => env.WEBAPP_URL || 'https://i-field.github.io/durak-mini-app/';
 const PRIZES = [10000, 5000, 2500];             // монеты за 1–3 место лиги
 const ACTIVE = 500, ACTMIN = 20, BOTCAP = 10;   // награда активным, порог партий, лимит партий с ботом в день
 const PACKS = [[2000, 35], [6000, 90], [15000, 200]]; // [монеты, Stars]
 const DONATE = [10, 50, 100, 500];              // суммы доната в Stars (бонус: 10 монет за 1 Star)
 const TURN_MS = 40000;                          // таймер хода онлайн
-const BOTNAMES = ['Рыцарь Сердец', 'Король Бубен', 'Варвар', 'Маска', 'Шут Изумруд', 'Шут Фиолет', 'Шут-Маска'];
+const BOTNAMES = ['Рыцарь Сердец', 'Король Бубен', 'Варвар', 'Маска', 'Шут Изумруд', 'Шут Фиолет', 'Шут-Маска', 'Рыцарь Железный', 'Ведьма Ночи', 'Пират Одноглазый', 'Берсерк', 'Шут Королевский', 'Королева Сердец', 'Сэр Рыжебород', 'Король Шутов'];
 const EMO = ['😂', '😡', '👍', '😱', '🔥', '🤝', '😎', '😭'];
 const CORS = { 'access-control-allow-origin': '*', 'access-control-allow-headers': 'content-type', 'access-control-allow-methods': 'GET,POST,OPTIONS' };
 const J = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { ...CORS, 'content-type': 'application/json' } });
@@ -47,6 +47,7 @@ function gAct(g,p){
 function gEnd(g,taken){
  const d=g.def;g.rd++;const all=g.table.flatMap(x=>x.d?[x.a,x.d]:[x.a]);
  if(taken)g.h[d].push(...all);else g.disc+=all.length;
+ g.last={t:g.table.map(x=>({a:x.a,d:x.d})),taken:!!taken,rd:g.rd};
  g.table=[];const order=[];for(let k=0;k<g.n;k++){const p=(g.att+k)%g.n;if(p!==d)order.push(p)}order.push(d);
  for(const p of order)while(g.h[p].length<6&&g.deck.length)g.h[p].push(g.deck.pop());
  if(!g.deck.length)for(let p=0;p<g.n;p++)if(!g.h[p].length&&!g.out.includes(p))g.out.push(p);
@@ -55,7 +56,7 @@ function gEnd(g,taken){
  let na=taken?(d+1)%g.n:d;while(g.out.includes(na))na=(na+1)%g.n;
  g.att=na;gStart(g)}
 const gRes=(g,p)=>g.durak===-1?'draw':p===g.durak?'lose':p===g.win?'win':'safe';
-function gView(g,p){return{n:g.n,me:p,hand:g.h[p],cnt:g.h.map(h=>h.length),table:g.table,tr:g.tr,deck:g.deck.length,trumpCard:g.deck[0]||null,att:g.att,def:g.def,taking:g.taking,out:g.out,over:g.over,durak:g.durak,cap:g.cap,act:gActors(g)}}
+function gView(g,p){return{n:g.n,me:p,hand:g.h[p],cnt:g.h.map(h=>h.length),table:g.table,tr:g.tr,deck:g.deck.length,trumpCard:g.deck[0]||null,att:g.att,def:g.def,taking:g.taking,out:g.out,over:g.over,durak:g.durak,cap:g.cap,act:gActors(g),last:g.last||null}}
 function aiMove(g,p,lvl){
  const h=g.h[p],un=undef(g),T=g.tr,val=c=>c.r+(c.s===T?20:0),R=Math.random,ix=c=>h.indexOf(c);
  if(p===g.def){
@@ -384,6 +385,18 @@ export class Room {
     const name = usr ? usr.name : (q.get('name') || 'Игрок').replace(/[<>&"'`]/g, '').slice(0, 20);
     const [client, server] = Object.values(new WebSocketPair());
     server.accept();
+    const rejoin = q.get('rejoin') === '1';
+    if (usr && this.g && !this.g.over) { // игрок вернулся за свой стол: забирает место у бота
+      const k = this.seat.findIndex(s => s && s.uid === usr.id);
+      if (k >= 0) {
+        const s = this.seat[k];
+        try { s.ws && s.ws.close(); } catch (_) {}
+        s.ws = server; s.bot = 0; s.left = 0; s.afk = 0; s.last = 0; delete s.lvl; s.name = s.name.replace(' 🤖', '');
+        this.attach(k, server); this.after();
+        return new Response(null, { status: 101, webSocket: client });
+      }
+    }
+    if (rejoin) { server.send(JSON.stringify({ t: 'gone' })); server.close(); return new Response(null, { status: 101, webSocket: client }); }
     if (!this.id) { // первый вошедший создаёт стол
       this.id = (q.get('room') || '').toUpperCase();
       this.n = Math.min(4, Math.max(2, Number(q.get('n')) || 2));
@@ -394,11 +407,14 @@ export class Room {
     if (i < 0 || (this.g && !this.g.over)) { server.send(JSON.stringify({ t: 'full' })); server.close(); return new Response(null, { status: 101, webSocket: client }); }
     this.seat[i] = { ws: server, name, uid: usr ? usr.id : null, pic: usr ? usr.pic : '', bot: 0, last: 0, afk: 0 };
     if (!this.humans().includes(this.host) || this.seat[this.host].bot) this.host = i;
-    server.addEventListener('message', e => { try { if (String(e.data).length < 400) this.msg(i, JSON.parse(e.data)); } catch (_) {} });
-    server.addEventListener('close', () => this.leave(i, server));
+    this.attach(i, server);
     this.lobby();
     this.ready();
     return new Response(null, { status: 101, webSocket: client });
+  }
+  attach(i, server) {
+    server.addEventListener('message', e => { try { if (String(e.data).length < 400) this.msg(i, JSON.parse(e.data)); } catch (_) {} });
+    server.addEventListener('close', () => this.leave(i, server));
   }
   send(i, o) { const s = this.seat[i]; if (s && s.ws && !s.bot) try { s.ws.send(JSON.stringify(o)); } catch (_) {} }
   all(o) { this.seat.forEach((_, i) => this.send(i, o)); }
