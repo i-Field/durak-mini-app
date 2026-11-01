@@ -4,8 +4,8 @@ compatibility_date = "2025-01-01"
 
 [vars]
 WEBAPP_URL = "https://i-field.github.io/durak-mini-app/"
-# Чтобы бот встречал видео вместо картинки: загрузите welcome.mp4 в репозиторий и уберите # ниже
-# WELCOME_VIDEO = "welcome.mp4"
+# Приветствие бота: видео welcome.mp4 из корня репозитория (если файла нет — отправится welcome.jpg)
+WELCOME_VIDEO = "welcome.mp4"
 
 [[durable_objects.bindings]]
 name = "ROOM"
